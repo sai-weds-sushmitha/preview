@@ -646,3 +646,18 @@ body.printed .telugu{opacity:.9!important}
 .ev-art .arch img[src*="wedding"],.ev-art .arch img[src*="reception"]{transform:scale(1.04);object-position:50% 50%}
 /* breathing room between "Shiva · Shakthi" and the script names (Telugu line removed) */
 .hero-inner .eyebrow{margin:clamp(10px,1.6vh,16px) 0 clamp(14px,2.4vh,26px)}
+/* Round 14b: legible, evenly aligned city cards */
+.cities::after{background:linear-gradient(180deg,rgba(55,6,8,.62) 0%,rgba(55,6,8,.38) 34%,rgba(55,6,8,.14) 52%,transparent 64%)}
+.ct-inner{width:100%;max-width:560px;padding-left:20px;padding-right:20px}
+.ct-pair{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:clamp(8px,2.6vw,20px);width:100%;max-width:520px;margin-left:auto;margin-right:auto}
+.ct-city{max-width:none;min-width:0;justify-content:center;gap:.3em;padding:1em .6em 1.05em;border-radius:14px;
+  background:rgba(48,6,9,.7);border:1px solid rgba(246,215,154,.6);-webkit-backdrop-filter:blur(14px) saturate(1.1);backdrop-filter:blur(14px) saturate(1.1);
+  box-shadow:0 10px 26px rgba(40,4,6,.35),inset 0 0 0 1px rgba(255,235,200,.06)}
+.ct-k{font-size:clamp(10px,2.7vw,11.5px);letter-spacing:.2em;color:#f6d79a}
+.ct-city b{font-size:clamp(20px,5.4vw,28px);letter-spacing:.01em;color:#fff7e8;white-space:nowrap;text-shadow:0 2px 6px rgba(0,0,0,.35)}
+.ct-d{display:flex;flex-direction:column;align-items:center;font-size:clamp(14px,3.7vw,17px);line-height:1.35;color:#fbe8c8}
+.ct-d em{font-style:italic;color:#f6d79a}
+.ct-sep{font-size:clamp(24px,5.6vw,34px)}
+.ct-line{text-shadow:0 2px 12px rgba(40,4,6,.6)}
+@media (max-width:360px){.ct-city b{font-size:19px}.ct-pair{gap:6px}}
+@media (min-width:900px){.ct-inner{max-width:680px}.ct-pair{max-width:600px}.ct-city{padding:1.2em .9em 1.25em}.ct-city b{font-size:32px}.ct-d{font-size:18px}.ct-k{font-size:12px}.ct-line{font-size:24px}}
