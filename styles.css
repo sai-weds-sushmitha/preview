@@ -766,3 +766,18 @@ body.printed .telugu{opacity:.9!important}
 @keyframes birdPath{0%{left:-8%;opacity:0;transform:translateY(0)}5%{opacity:.9}25%{transform:translateY(-60%)}50%{transform:translateY(40%)}75%{transform:translateY(-30%)}95%{opacity:.9}100%{left:106%;opacity:0;transform:translateY(0)}}
 @keyframes birdPath2{0%{left:106%;opacity:0;transform:scaleX(-1) translateY(0)}5%{opacity:.85}35%{transform:scaleX(-1) translateY(-50%)}70%{transform:scaleX(-1) translateY(30%)}95%{opacity:.85}100%{left:-8%;opacity:0;transform:scaleX(-1) translateY(0)}}
 @media (prefers-reduced-motion:reduce){.sea,.bd,.bd-b{animation:none!important}.bd{display:none}}
+
+/* ===== Round 15e: real bird silhouettes (4-frame wingbeat flipbook) + moon beside the title ===== */
+.bd{width:3.4%}
+.bd.k2{width:2.8%}.bd.k3{width:3%}
+.bd-b{display:block;width:100%;aspect-ratio:2/1;background:url('assets/img/bird-sheet.webp') 0 0/400% 100% no-repeat;animation:wings 2.6s step-end infinite}
+.bd.k2 .bd-b{animation-delay:-.7s}
+.bd.k3 .bd-b{animation-duration:3.1s;animation-delay:-1.9s}
+@keyframes wings{0%{background-position:0 0}6%{background-position:33.333% 0}12%{background-position:66.667% 0}18%{background-position:33.333% 0}24%{background-position:0 0}30%{background-position:33.333% 0}36%{background-position:66.667% 0}42%{background-position:33.333% 0}48%{background-position:0 0}54%,100%{background-position:33.333% 0}}
+@keyframes birdPath{0%{left:-8%;opacity:0;transform:translateY(0) rotate(0)}5%{opacity:.92}22%{transform:translateY(-55%) rotate(-4deg)}48%{transform:translateY(35%) rotate(3deg)}74%{transform:translateY(-25%) rotate(-3deg)}95%{opacity:.92}100%{left:106%;opacity:0;transform:translateY(0) rotate(0)}}
+@keyframes birdPath2{0%{left:106%;opacity:0;transform:scaleX(-1) translateY(0) rotate(0)}5%{opacity:.88}35%{transform:scaleX(-1) translateY(-45%) rotate(-4deg)}70%{transform:scaleX(-1) translateY(25%) rotate(3deg)}95%{opacity:.88}100%{left:-8%;opacity:0;transform:scaleX(-1) translateY(0) rotate(0)}}
+.ct-inner{position:relative}
+.ct-moon{position:absolute;top:clamp(26px,5.2vh,62px);right:clamp(10px,5vw,40px);width:clamp(26px,7.4vw,44px);height:auto;opacity:.95;pointer-events:none;
+  filter:drop-shadow(0 0 8px rgba(255,236,190,.55));animation:moonGlow 6s ease-in-out infinite}
+@keyframes moonGlow{0%,100%{filter:drop-shadow(0 0 6px rgba(255,236,190,.4))}50%{filter:drop-shadow(0 0 12px rgba(255,236,190,.75))}}
+@media (prefers-reduced-motion:reduce){.bd-b,.ct-moon{animation:none!important}}
