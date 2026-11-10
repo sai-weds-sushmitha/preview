@@ -781,3 +781,14 @@ body.printed .telugu{opacity:.9!important}
   filter:drop-shadow(0 0 8px rgba(255,236,190,.55));animation:moonGlow 6s ease-in-out infinite}
 @keyframes moonGlow{0%,100%{filter:drop-shadow(0 0 6px rgba(255,236,190,.4))}50%{filter:drop-shadow(0 0 12px rgba(255,236,190,.75))}}
 @media (prefers-reduced-motion:reduce){.bd-b,.ct-moon{animation:none!important}}
+
+/* ===== Round 15f: natural water — the painted sea rolls row by row (24 bands, staggered swell) ===== */
+.sea{display:none}
+.waves{position:absolute;left:0;top:66.198%;width:100%;height:33.802%;pointer-events:none}
+.waves i{position:absolute;left:0;width:100%;height:calc(100% / 24);top:calc(var(--i) * 100% / 24);
+  background:url('assets/img/vizag-sea.webp') no-repeat;background-size:100% 2400%;background-position:0 calc(var(--i) * 100% / 23);
+  animation:swell 4.6s ease-in-out infinite;animation-delay:calc(var(--i) * -.32s);will-change:transform}
+.waves i:nth-child(even){animation-name:swell2}
+@keyframes swell{0%,100%{transform:translate(-.35%,0)}50%{transform:translate(.35%,-16%)}}
+@keyframes swell2{0%,100%{transform:translate(.35%,-4%)}50%{transform:translate(-.35%,-18%)}}
+@media (prefers-reduced-motion:reduce){.waves i{animation:none!important}}
