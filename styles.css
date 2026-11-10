@@ -661,3 +661,14 @@ body.printed .telugu{opacity:.9!important}
 .ct-line{text-shadow:0 2px 12px rgba(40,4,6,.6)}
 @media (max-width:360px){.ct-city b{font-size:19px}.ct-pair{gap:6px}}
 @media (min-width:900px){.ct-inner{max-width:680px}.ct-pair{max-width:600px}.ct-city{padding:1.2em .9em 1.25em}.ct-city b{font-size:32px}.ct-d{font-size:18px}.ct-k{font-size:12px}.ct-line{font-size:24px}}
+/* Round 14c (portrait): painting flows BELOW the text — empty sky behind the words, lighthouse/hill/statue always clear of the cards */
+@media (max-aspect-ratio:4/5){
+  .cities{display:flex;flex-direction:column;align-items:center;min-height:0;background:#891f20}
+  .ct-inner{order:1;padding-bottom:0}
+  .ct-bg{order:2;position:relative;inset:auto;width:100%;height:auto;object-fit:fill;display:block;margin-top:calc(-100vw * 1.792 * .47)}
+  .cities::after{background:linear-gradient(180deg,rgba(55,6,8,.35) 0%,rgba(55,6,8,.18) 30%,transparent 48%)}
+}
+@media (max-aspect-ratio:4/5){.ct-bg{-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 14%);mask-image:linear-gradient(180deg,transparent 0,#000 14%)}}
+@media (min-aspect-ratio:4/5){.ct-bg{object-position:50% 47%}}
+@media (min-aspect-ratio:4/5){.cities{min-height:max(100svh,64vw)}.ct-bg{object-position:50% 62%}}
+@media (min-aspect-ratio:4/5){.cities{min-height:max(100svh,80vw)}.ct-bg{object-position:50% 58%}}
