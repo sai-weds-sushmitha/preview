@@ -744,3 +744,25 @@ body.printed .telugu{opacity:.9!important}
 @media (prefers-reduced-motion:reduce){.pb,.lh-glow,.lh-beam{animation:none!important}.pb{opacity:1}.lh-beam{display:none}}
 .pb.b3{animation:sail3 42s linear -6s infinite,rock 3.2s ease-in-out infinite}
 .pb.b4{animation:sail4 42s linear -27s infinite,rock 3.8s ease-in-out -.8s infinite}
+
+/* ===== Round 15d: moving water + fewer, natural birds ===== */
+.ct-bird{display:none}
+.sea{position:absolute;left:0;top:66.198%;width:100%;height:auto;max-width:none;pointer-events:none;will-change:transform}
+.sea.s1{animation:seaA 7s ease-in-out infinite alternate}
+.sea.s2{opacity:.5;animation:seaB 5.3s ease-in-out -2s infinite alternate}
+@keyframes seaA{from{transform:translate(-1.1%,0)}to{transform:translate(1.1%,.35%)}}
+@keyframes seaB{from{transform:translate(1.3%,.3%)}to{transform:translate(-1.3%,-.1%)}}
+.pb,.lh-glow,.lh-beam{z-index:2}
+/* birds: a pair and a loner; a few wingbeats then a glide, on a gently rising/dipping path */
+.bd{position:absolute;z-index:3;left:-8%;width:2.6%;opacity:0;will-change:left,transform}
+.bd-b{display:block;animation:flapGlide 3.2s ease-in-out infinite}
+.bd-b svg{width:100%;height:auto;display:block}
+.bd.k1{top:51%;animation:birdPath 30s linear infinite}
+.bd.k2{top:52.6%;width:2.1%;animation:birdPath 30s linear -.9s infinite}
+.bd.k2 .bd-b{animation-delay:-.45s}
+.bd.k3{top:56%;width:2.2%;animation:birdPath2 37s linear -14s infinite}
+.bd.k3 .bd-b{animation-delay:-1.6s;animation-duration:3.8s}
+@keyframes flapGlide{0%{transform:scaleY(1)}7%{transform:scaleY(-.35)}14%{transform:scaleY(1)}21%{transform:scaleY(-.35)}28%{transform:scaleY(1)}35%{transform:scaleY(-.3)}42%,100%{transform:scaleY(.9)}}
+@keyframes birdPath{0%{left:-8%;opacity:0;transform:translateY(0)}5%{opacity:.9}25%{transform:translateY(-60%)}50%{transform:translateY(40%)}75%{transform:translateY(-30%)}95%{opacity:.9}100%{left:106%;opacity:0;transform:translateY(0)}}
+@keyframes birdPath2{0%{left:106%;opacity:0;transform:scaleX(-1) translateY(0)}5%{opacity:.85}35%{transform:scaleX(-1) translateY(-50%)}70%{transform:scaleX(-1) translateY(30%)}95%{opacity:.85}100%{left:-8%;opacity:0;transform:scaleX(-1) translateY(0)}}
+@media (prefers-reduced-motion:reduce){.sea,.bd,.bd-b{animation:none!important}.bd{display:none}}
