@@ -644,3 +644,5 @@ body.printed .telugu{opacity:.9!important}
 @media (min-aspect-ratio:4/5){.ct-bg{object-position:50% 55%}.cities::after{background:linear-gradient(180deg,rgba(60,8,10,.5) 0%,rgba(60,8,10,.12) 45%,transparent 65%)}}
 /* Bapu-style paintings have no printed border: show nearly whole */
 .ev-art .arch img[src*="wedding"],.ev-art .arch img[src*="reception"]{transform:scale(1.04);object-position:50% 50%}
+/* breathing room between "Shiva · Shakthi" and the script names (Telugu line removed) */
+.hero-inner .eyebrow{margin:clamp(10px,1.6vh,16px) 0 clamp(14px,2.4vh,26px)}
