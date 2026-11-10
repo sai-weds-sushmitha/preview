@@ -612,3 +612,10 @@ body.printed .telugu{opacity:.9!important}
 .vlm img{width:100%;height:auto;display:block;filter:drop-shadow(0 6px 6px rgba(60,30,0,.25))}
 .vlm figcaption{display:inline-block;margin-top:4px;font-family:var(--f-body);font-style:italic;font-size:calc(13px * var(--s,1));color:#4a2a10;background:rgba(251,243,223,.88);padding:.15em .6em;border-radius:6px;white-space:nowrap}
 .vlm.in{opacity:1}
+/* minimal wedding painting has no printed border: show it whole, couple centred */
+.ev-wedding .arch img{transform:none;object-position:50% 62%}
+/* optical centring of the script names (glyph slant pushes the ink right) */
+.nm,.amp{position:relative;left:-.06em}
+/* subtle scroll parallax uses the independent `translate` property so it never fights entrance animations */
+[data-par]{will-change:translate}
+.ev-wedding .arch img{transform:scale(1.1)}

@@ -138,6 +138,31 @@
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .15, rootMargin: '0px 0px -6% 0px' });
   $$('.reveal').forEach(el => io.observe(el));
 
+  /* ================= subtle parallax while scrolling ================= */
+  (() => {
+    if (reduce) return;
+    const mark = (sel, f) => $$(sel).forEach(el => el.dataset.par = f);
+    mark('.ev-art .arch img', .07);       // paintings float gently inside their arches
+    mark('.h-display, .vj-head', .05);    // headings glide a little slower than the page
+    mark('.so-mono, .count .medal, .count .cd-medal', -.06);
+    const els = $$('[data-par]'), hero = $('.hero-inner');
+    let tk = false;
+    const run = () => {
+      tk = false; const vh = innerHeight;
+      if (body.classList.contains('open') && hero) {
+        const y = Math.max(0, scrollY);
+        if (y < vh * 1.2) { hero.style.translate = `0 ${(y * .28).toFixed(1)}px`; hero.style.opacity = Math.max(0, 1 - y / (vh * .85)).toFixed(3); }
+      }
+      els.forEach(el => {
+        const r = el.getBoundingClientRect(); if (r.bottom < -100 || r.top > vh + 100) return;
+        const off = (r.top + r.height / 2 - vh / 2) * -(+el.dataset.par);
+        el.style.translate = `0 ${off.toFixed(1)}px`;
+      });
+    };
+    addEventListener('scroll', () => { if (!tk) { tk = true; requestAnimationFrame(run); } }, { passive: true });
+    addEventListener('resize', run); run();
+  })();
+
   /* ================= THE JOURNEY: scroll down the painted map, Warangal -> Vizag ================= */
   (() => {
     const vm = $('#vm'), world = $('#vmWorld'); if (!vm) return;
