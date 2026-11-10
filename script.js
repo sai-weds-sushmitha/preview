@@ -156,7 +156,7 @@
       const left = Math.min(0, Math.max(fw - w, fw / 2 - FX * sc));
       world.style.left = left + 'px';
       vm.style.setProperty('--s', Math.min(1.25, Math.max(.85, fw / 420)).toFixed(3));
-      $$('.vpin,.vcard', world).forEach(place);
+      $$('.vpin,.vcard,.vlm', world).forEach(place);
       // cards sit beside the route, on whichever side has more room, never on top of it
       const pathX = y => { let lo = 0, hi = L; for (let i = 0; i < 18; i++) { const m = (lo + hi) / 2; if (trail.getPointAtLength(m).y < y) lo = m; else hi = m; } return trail.getPointAtLength(lo).x; };
       const gs = +getComputedStyle(vm).getPropertyValue('--s') || 1;
@@ -190,7 +190,7 @@
       plane.style.filter = `drop-shadow(${5 + lift * 14}px ${6 + lift * 16}px ${3 + lift * 4}px rgba(40,15,0,${.45 - lift * .2}))`;
       if (r.top < vh * .7) pW.classList.add('drop');
       pV.classList.toggle('drop', p >= .985);
-      $$('.vcard', world).forEach(c => c.classList.toggle('in', c.getBoundingClientRect().top < vh * .82));
+      $$('.vcard,.vlm', world).forEach(c => c.classList.toggle('in', c.getBoundingClientRect().top < vh * .85));
     };
     // dashed trail revealed up to `len` with a mask path (dash + reveal can't share one dasharray)
     const svg = $('.vm-svg'), NS = 'http://www.w3.org/2000/svg';

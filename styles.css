@@ -603,3 +603,12 @@ body.open .scroll-cue{animation:fade .8s ease 1.05s forwards}
 body.film .hero-inner{z-index:120;transform-origin:50% 40%;will-change:transform,opacity}
 body.printed .hero-inner :is(.medal-hero,.h-fade,.nm,.amp,.tagline,.date-line){animation:none!important;opacity:1!important;transform:none!important}
 body.printed .telugu{opacity:.9!important}
+/* Round 13: script lettering for the journey title and the family sign-off (client asked for a font change) */
+.vj-title{display:block;font-family:var(--f-script);font-size:clamp(46px,12vw,84px);line-height:1.1;margin-top:.05em;letter-spacing:0}
+.vj-title span{background:linear-gradient(175deg,#fff0c4 8%,#e8bd6a 50%,#b5832f 95%);-webkit-background-clip:text;background-clip:text;color:transparent;padding:0 .06em}
+.vj-title i{font-family:var(--f-num);font-style:italic;font-size:.38em;color:#f0c46a;vertical-align:.35em;margin:0 .2em}
+.so-family{font-family:var(--f-script);font-size:clamp(46px,11vw,78px);line-height:1.15;color:var(--madder);margin:.05em 0 .5em;letter-spacing:0}
+.vlm{position:absolute;z-index:2;width:calc(132px * var(--s,1));margin:0;transform:translate(-50%,-50%);text-align:center;opacity:0;transition:opacity .8s ease}
+.vlm img{width:100%;height:auto;display:block;filter:drop-shadow(0 6px 6px rgba(60,30,0,.25))}
+.vlm figcaption{display:inline-block;margin-top:4px;font-family:var(--f-body);font-style:italic;font-size:calc(13px * var(--s,1));color:#4a2a10;background:rgba(251,243,223,.88);padding:.15em .6em;border-radius:6px;white-space:nowrap}
+.vlm.in{opacity:1}
