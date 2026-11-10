@@ -140,19 +140,26 @@
 
   /* ================= "Our Two Celebrations": keep the painting's lighthouse clear of the cards on wide screens ================= */
   (() => {
-    const sec = $('#journey.cities'), img = sec && $('.ct-bg', sec), pair = sec && $('.ct-pair', sec); if (!sec) return;
+    const sec = $('#journey.cities'), art = sec && $('.ct-art', sec), pair = sec && $('.ct-pair', sec); if (!sec) return;
     const fit = () => {
-      if (innerWidth / innerHeight < .8) { sec.style.minHeight = ''; img.style.objectPosition = ''; return; }
+      if (innerWidth / innerHeight < .8) { sec.style.minHeight = ''; art.style.top = ''; return; }
       const W = sec.clientWidth, cardsBottom = pair.getBoundingClientRect().bottom - sec.getBoundingClientRect().top;
-      const want = cardsBottom + 70;                         // lighthouse top sits 70px under the cards
-      const dispH0 = 1792 * (W / 1000);
-      const secH = Math.max(innerHeight, Math.round(want + (.80 - .585) * dispH0));   // show down to the sand
+      const want = cardsBottom + 70;                          // lighthouse top sits 70px under the cards
+      const artH = 1920 * (W / 1080);
+      const secH = Math.max(innerHeight, Math.round(want + (.80 - .585) * artH));   // show down to the sand
       sec.style.minHeight = secH + 'px';
-      const dispH = 1792 * Math.max(W / 1000, secH / 1792);
-      const off = Math.min(Math.max(.585 * dispH - want, 0), dispH - secH);
-      img.style.objectPosition = `50% ${dispH - secH > 0 ? (off / (dispH - secH) * 100).toFixed(2) : 50}%`;
+      const off = Math.min(Math.max(.585 * artH - want, 0), artH - secH);
+      art.style.top = (-off) + 'px';
     };
     addEventListener('resize', fit); addEventListener('load', fit); document.fonts && document.fonts.ready.then(fit); fit();
+    const vid = $('video.ct-bg', sec);
+    if (vid && !reduce) {
+      vid.muted = true;
+      new IntersectionObserver(es => es.forEach(e => {
+        if (e.isIntersecting) { if (vid.preload !== 'auto') vid.preload = 'auto'; const p = vid.play(); p && p.catch && p.catch(() => {}); }
+        else vid.pause();
+      }), { rootMargin: '200px 0px' }).observe(sec);
+    }
   })();
 
   /* ================= subtle parallax while scrolling ================= */

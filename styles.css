@@ -672,3 +672,75 @@ body.printed .telugu{opacity:.9!important}
 @media (min-aspect-ratio:4/5){.ct-bg{object-position:50% 47%}}
 @media (min-aspect-ratio:4/5){.cities{min-height:max(100svh,64vw)}.ct-bg{object-position:50% 62%}}
 @media (min-aspect-ratio:4/5){.cities{min-height:max(100svh,80vw)}.ct-bg{object-position:50% 58%}}
+
+/* ===== Round 15: living painting (boats + birds) and larger text on the celebrations screen ===== */
+.ct-art{position:absolute;left:0;top:0;width:100%;aspect-ratio:1000/1792;z-index:0;overflow:hidden}
+.ct-art .ct-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;margin:0;-webkit-mask-image:none;mask-image:none}
+@media (max-aspect-ratio:4/5){
+  .ct-art{order:2;position:relative;top:auto;margin-top:calc(-100vw * 1.792 * .47);-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 14%);mask-image:linear-gradient(180deg,transparent 0,#000 14%)}
+}
+.ct-boat{position:absolute;width:7.5%;height:auto;max-width:none;transform:translate(-50%,-88%);opacity:0;will-change:left,opacity,transform}
+.ct-boat.b1{top:72.2%;animation:sailR 42s linear infinite,bob 3.4s ease-in-out infinite}
+.ct-boat.b2{top:78.6%;width:8.5%;animation:sailL 54s linear -18s infinite,bob 3.9s ease-in-out -1s infinite}
+@keyframes sailR{0%{left:-6%;opacity:0}8%{opacity:1}88%{opacity:1}100%{left:47%;opacity:0}}
+@keyframes sailL{0%{left:50%;opacity:0}8%{opacity:1}88%{opacity:1}100%{left:-6%;opacity:0}}
+@keyframes bob{0%,100%{transform:translate(-50%,-88%) rotate(-1.6deg)}50%{transform:translate(-50%,-84%) rotate(1.6deg)}}
+.ct-boat.b2{scale:-1 1}
+.ct-bird{position:absolute;width:3%;left:-6%;opacity:0;will-change:left,top}
+.ct-bird svg{width:100%;height:auto;display:block;transform-origin:50% 60%;animation:flap .9s ease-in-out infinite}
+.ct-bird.w1{top:52%;animation:fly 34s linear infinite}
+.ct-bird.w2{top:54%;width:2.4%;animation:fly 34s linear -1.2s infinite}
+.ct-bird.w3{top:50.5%;width:2.2%;animation:fly 34s linear -2.1s infinite}
+.ct-bird.w4{top:57%;width:2.6%;animation:fly2 41s linear -16s infinite}
+.ct-bird.w5{top:58.5%;width:2%;animation:fly2 41s linear -17.4s infinite}
+.ct-bird.w2 svg{animation-delay:-.3s}.ct-bird.w3 svg{animation-delay:-.55s}.ct-bird.w5 svg{animation-delay:-.4s}
+@keyframes fly{0%{left:-6%;opacity:0;transform:translateY(0)}6%{opacity:.85}50%{transform:translateY(-14px)}94%{opacity:.85}100%{left:104%;opacity:0;transform:translateY(4px)}}
+@keyframes fly2{0%{left:104%;opacity:0;transform:scaleX(-1)}6%{opacity:.8}94%{opacity:.8}100%{left:-6%;opacity:0;transform:scaleX(-1) translateY(-10px)}}
+@keyframes flap{0%,100%{transform:scaleY(1)}50%{transform:scaleY(-.55)}}
+@media (prefers-reduced-motion:reduce){.ct-boat,.ct-bird,.ct-bird svg{animation:none!important}.ct-boat{opacity:1;left:22%}.ct-bird{display:none}}
+/* larger text (client: "text size needs to go up slightly") */
+.ct-eye{font-size:13.5px;letter-spacing:.32em}
+.ct-title{font-size:clamp(54px,13.6vw,96px)}
+.ct-line{font-size:clamp(19.5px,5vw,26px);line-height:1.42}
+.ct-pair{gap:clamp(6px,2vw,18px)}
+.ct-k{font-size:clamp(11px,2.9vw,12.5px)}
+.ct-city{padding:1.05em .5em 1.1em}
+.ct-city b{font-size:clamp(22px,6vw,30px)}
+.ct-d{font-size:clamp(15.5px,4.1vw,18px)}
+.ct-sep{font-size:clamp(22px,5vw,32px)}
+@media (max-width:370px){.ct-city b{font-size:20px}.ct-d{font-size:15px}}
+@media (min-width:900px){.ct-city b{font-size:34px}.ct-d{font-size:19px}.ct-line{font-size:26px}.ct-k{font-size:13px}}
+.ct-city b{font-size:clamp(20px,5.3vw,30px)}
+.ct-city{padding:1.05em .45em 1.1em}
+.ct-pair{gap:clamp(5px,1.6vw,18px)}
+@media (min-width:900px){.ct-city b{font-size:34px}}
+
+/* Round 15b: the painting itself is a gentle Kling loop (boats, birds, waves) — 9:16 frame */
+.ct-art{aspect-ratio:1080/1920}
+.ct-art .ct-bg{object-fit:cover;background:#891f20}
+@media (max-aspect-ratio:4/5){.ct-art{margin-top:calc(-100vw * 1.7778 * .47)}}
+
+/* ===== Round 15c: the painting comes alive with its own cut-out boats, birds and the lighthouse beam ===== */
+.ct-art .ct-bg{object-fit:fill}
+.pb{position:absolute;left:var(--x0);height:auto;max-width:none;will-change:left,transform,opacity;transform-origin:50% 90%}
+/* far boats: drift and rock in place */
+.pb.b1{animation:driftS 14s ease-in-out infinite alternate,rock 3.6s ease-in-out infinite}
+.pb.b2{animation:driftS 17s ease-in-out -6s infinite alternate,rock 4.1s ease-in-out -1.3s infinite}
+@keyframes driftS{from{left:calc(var(--x0) - 2.2%)}to{left:calc(var(--x0) + 2.2%)}}
+/* near boats: sail across the open water, fade in/out at the edges */
+.pb.b3{animation:sail3 38s linear -14s infinite,rock 3.2s ease-in-out infinite}
+.pb.b4{animation:sail4 46s linear -30s infinite,rock 3.8s ease-in-out -.8s infinite}
+@keyframes sail3{0%{left:4%;opacity:0}7%{opacity:1}90%{opacity:1}100%{left:58%;opacity:0}}
+@keyframes sail4{0%{left:-6%;opacity:0}7%{opacity:1}90%{opacity:1}100%{left:44%;opacity:0}}
+@keyframes rock{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-6%) rotate(2deg)}}
+/* lighthouse: soft lamp glow + sweeping beam */
+.lh-glow{position:absolute;left:61.2%;top:58.75%;width:9%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;
+  background:radial-gradient(circle,rgba(255,244,200,.95) 0,rgba(255,214,120,.55) 28%,rgba(255,190,90,0) 70%);mix-blend-mode:screen;animation:lamp 3s ease-in-out infinite}
+@keyframes lamp{0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(.85)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}}
+.lh-beam{position:absolute;left:61.2%;top:58.75%;width:46%;height:5%;transform-origin:0 50%;mix-blend-mode:screen;pointer-events:none;
+  background:linear-gradient(90deg,rgba(255,240,190,.75),rgba(255,225,160,.25) 55%,rgba(255,220,150,0));
+  clip-path:polygon(0 44%,100% 0,100% 100%,0 56%);animation:sweep 7s linear infinite}
+@keyframes sweep{0%{transform:translateY(-50%) scaleX(1);opacity:.85}25%{transform:translateY(-50%) scaleX(.04);opacity:.25}50%{transform:translateY(-50%) scaleX(-1);opacity:.7}75%{transform:translateY(-50%) scaleX(-.04);opacity:.25}100%{transform:translateY(-50%) scaleX(1);opacity:.85}}
+@media (prefers-reduced-motion:reduce){.pb,.lh-glow,.lh-beam{animation:none!important}.pb{opacity:1}.lh-beam{display:none}}
+.pb.b3{animation:sail3 42s linear -6s infinite,rock 3.2s ease-in-out infinite}
+.pb.b4{animation:sail4 42s linear -27s infinite,rock 3.8s ease-in-out -.8s infinite}
