@@ -154,6 +154,9 @@
       const off = Math.min(Math.max(LM * artH - want, 0), artH - secH);
       art.style.top = (-off) + 'px';
     };
+    const waves = $('.waves', sec);
+    const lh = () => waves && waves.style.setProperty('--lh', waves.getBoundingClientRect().height.toFixed(2) + 'px');
+    addEventListener('resize', lh); addEventListener('load', lh); lh();
     addEventListener('resize', fit); addEventListener('load', fit); document.fonts && document.fonts.ready.then(fit); fit();
     const vid = $('video.ct-bg', sec);
     if (vid && !reduce) {

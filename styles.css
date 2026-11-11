@@ -786,7 +786,7 @@ body.printed .telugu{opacity:.9!important}
 .sea{display:none}
 .waves{position:absolute;left:0;top:66.198%;width:100%;height:33.802%;pointer-events:none}
 .waves i{position:absolute;left:0;width:100%;height:calc(100% / 24);top:calc(var(--i) * 100% / 24);
-  background:url('assets/img/vizag-sea.webp') no-repeat;background-size:100% 2400%;background-position:0 calc(var(--i) * 100% / 23);
+  background:url('assets/img/sea-vw17.webp') no-repeat;background-size:100% 2400%;background-position:0 calc(var(--i) * 100% / 23);
   animation:swell 4.6s ease-in-out infinite;animation-delay:calc(var(--i) * -.32s);will-change:transform}
 .waves i:nth-child(even){animation-name:swell2}
 @keyframes swell{0%,100%{transform:translate(-.35%,0)}50%{transform:translate(.35%,-16%)}}
@@ -813,3 +813,6 @@ body.printed .hero-inner{opacity:1!important;transform:none!important;clip-path:
 @keyframes sailN{from{left:3%}to{left:21%}}
 @keyframes driftS{from{left:calc(var(--x0) - 1.8%)}to{left:calc(var(--x0) + 1.8%)}}
 .bd.k1{top:40.5%}.bd.k2{top:41.8%}.bd.k3{top:42.6%}
+
+/* seamless wave bands: px-exact sizing (set from JS) + 2px overlap so no hairline can show between strips */
+.waves i{height:calc(var(--lh,300px) / 24 + 2px);top:calc(var(--i) * var(--lh,300px) / 24 - 1px);background-size:100% var(--lh,300px);background-position:0 calc(var(--i) * var(--lh,300px) / -24 + 1px)}
