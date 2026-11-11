@@ -18,23 +18,24 @@
   const gate = $('#gate'), gvid = $('#gvid'), hero = $('#hero');
   const REVEAL_AT = 3.15, STOP_AT = 3.6;          // ribbon gone by ~3.5s; the envelope flap would start to lift at ~3.6s
   let opened = false, revealing = false, done = false;
-  const ring = document.createElement('i'); ring.className = 'iris-ring'; document.body.appendChild(ring);
+  // smooth reveal: the invitation (hero) is lifted above the envelope and opened as a growing circle.
+  // clip-path + transform transitions run on the compositor, so it stays smooth on phones.
+  const ring = document.createElement('i'); ring.className = 'iris2'; document.body.appendChild(ring);
   const irisReveal = () => {
     if (revealing) return; revealing = true;
-    // the invitation is already there underneath: names in place, nothing re-animates
     body.classList.add('printed', 'open'); body.classList.remove('locked'); scrollTo(0, 0); loadDeferred();
-    const R = Math.hypot(innerWidth, innerHeight) / 2 + 120, t0 = performance.now(), dur = reduce ? 1 : 1500;
-    const ez = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    gate.classList.add('iris'); ring.classList.add('on');
-    const step = now => {
-      const k = Math.min(1, (now - t0) / dur), r = ez(k) * R;
-      gate.style.setProperty('--r', r.toFixed(1) + 'px'); ring.style.setProperty('--r', r.toFixed(1) + 'px');
-      ring.style.opacity = (k < .85 ? 1 : (1 - k) / .15).toFixed(3);
-      hero.style.transform = `scale(${(1.06 - .06 * ez(k)).toFixed(4)})`;
-      if (k < 1) requestAnimationFrame(step);
-      else { done = true; gate.remove(); ring.remove(); hero.style.transform = ''; try { gvid && gvid.pause(); } catch (e) {} }
+    const R = Math.ceil(Math.hypot(innerWidth, innerHeight)) + 40;
+    hero.style.setProperty('--R', R + 'px'); ring.style.setProperty('--R', R + 'px');
+    hero.classList.add('iris-from'); ring.classList.add('on');
+    hero.getBoundingClientRect();                       // commit the start state
+    requestAnimationFrame(() => requestAnimationFrame(() => { hero.classList.add('iris-to'); ring.classList.add('go'); }));
+    const end = () => {
+      if (done) return; done = true;
+      hero.classList.remove('iris-from', 'iris-to'); gate.remove(); ring.remove();
+      try { gvid && gvid.pause(); } catch (e) {}
     };
-    requestAnimationFrame(step);
+    hero.addEventListener('transitionend', e => { if (e.propertyName === 'clip-path' || e.propertyName === '-webkit-clip-path') end(); });
+    setTimeout(end, reduce ? 50 : 2100);
   };
   const finish = () => {
     if (opened) { irisReveal(); return; }      // a second tap skips straight to the reveal
@@ -166,6 +167,78 @@
         else vid.pause();
       }), { rootMargin: '200px 0px' }).observe(sec);
     }
+  })();
+
+  /* ================= continuous scroll flow: florals at every section join, hanging garlands, drifting petals ================= */
+  (() => {
+    if (reduce) return;
+    const layer = document.createElement('div'); layer.className = 'flow'; layer.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(layer);
+    const joins = ['#journey', '#events', '#count', '.signoff'].map(q => $(q)).filter(Boolean);
+    const items = [];
+    joins.forEach((sec, n) => {
+      ['l', 'r'].forEach(side => {
+        const im = document.createElement('img'); im.src = 'assets/img/sprig.webp'; im.alt = ''; im.loading = 'lazy';
+        im.className = 'fl-sprig ' + side; layer.appendChild(im);
+        items.push({ el: im, sec, side, kind: 'sprig', n });
+      });
+    });
+    const ev = $('#events');
+    if (ev) ['l', 'r'].forEach(side => {
+      const g = document.createElement('img'); g.src = 'assets/img/garland.webp'; g.alt = ''; g.loading = 'lazy';
+      g.className = 'fl-garland ' + side; layer.appendChild(g); items.push({ el: g, sec: ev, side, kind: 'garland' });
+    });
+    const place = () => {
+      const docTop = scrollY;
+      layer.style.height = document.documentElement.scrollHeight + 'px';
+      items.forEach(it => { it.top = it.sec.getBoundingClientRect().top + docTop; it.el.style.top = it.top + 'px'; });
+    };
+    let tk = false;
+    const run = () => {
+      tk = false; const vh = innerHeight, y = scrollY;
+      items.forEach(it => {
+        const rel = it.top - y;                                   // join position in the viewport
+        const p = Math.max(0, Math.min(1, (vh - rel) / (vh * .7)));   // 0 = join just below screen, 1 = well inside
+        const e = 1 - Math.pow(1 - p, 3), dir = it.side === 'l' ? -1 : 1;
+        if (it.kind === 'sprig') {
+          it.el.style.translate = `${(1 - e) * dir * 60}% ${(1 - e) * 30}px`;
+          it.el.style.rotate = `${(1 - e) * dir * 14 + (rel / vh) * dir * -4}deg`;
+          it.el.style.opacity = (0.15 + .85 * e).toFixed(3);
+        } else {
+          it.el.style.translate = `0 ${(-(1 - e) * 55).toFixed(1)}%`;
+          it.el.style.opacity = e.toFixed(3);
+        }
+      });
+    };
+    const kick = () => { if (!tk) { tk = true; requestAnimationFrame(run); } };
+    addEventListener('scroll', kick, { passive: true });
+    addEventListener('resize', () => { place(); run(); });
+    addEventListener('load', () => { place(); run(); });
+    new ResizeObserver(() => { place(); run(); }).observe(document.body);
+    place(); run();
+
+    // drifting petals across the page (very sparse, behind content edges)
+    const cv = document.createElement('canvas'); cv.className = 'fl-petals'; document.body.appendChild(cv);
+    const ctx = cv.getContext('2d'); let W = 0, H = 0, dpr = Math.min(2, devicePixelRatio || 1);
+    const size = () => { W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px'; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
+    size(); addEventListener('resize', size);
+    const cols = ['#f2a33a', '#e8862a', '#f6c453', '#c8323a', '#fff3e0'];
+    const P = Array.from({ length: 10 }, (_, i) => ({ x: Math.random() * W, y: Math.random() * H, r: 4 + Math.random() * 4, vy: .25 + Math.random() * .35, a: Math.random() * 6.28, va: (Math.random() - .5) * .02, sw: Math.random() * 6.28, c: cols[i % cols.length] }));
+    let last = 0, lastY = scrollY;
+    const tick = t => {
+      requestAnimationFrame(tick);
+      if (!body.classList.contains('open') || document.hidden) return;
+      if (t - last < 33) return; last = t;            // ~30fps is plenty for drifting petals
+      const dy = scrollY - lastY; lastY = scrollY;
+      ctx.clearRect(0, 0, W, H);
+      P.forEach(p => {
+        p.sw += .02; p.a += p.va; p.y += p.vy - dy * .15; p.x += Math.sin(p.sw) * .35;
+        if (p.y > H + 20) { p.y = -20; p.x = Math.random() * W; } if (p.y < -30) { p.y = H + 10; }
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.globalAlpha = .55; ctx.fillStyle = p.c;
+        ctx.beginPath(); ctx.ellipse(0, 0, p.r, p.r * .55, 0, 0, 6.283); ctx.fill(); ctx.restore();
+      });
+    };
+    requestAnimationFrame(tick);
   })();
 
   /* ================= subtle parallax while scrolling ================= */
