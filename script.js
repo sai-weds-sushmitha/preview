@@ -218,10 +218,11 @@
         const rel = it.top - y;                                   // join position in the viewport
         const p = Math.max(0, Math.min(1, (vh - rel) / (vh * .7)));   // 0 = join just below screen, 1 = well inside
         const e = 1 - Math.pow(1 - p, 3), dir = it.side === 'l' ? -1 : 1;
-        if (it.kind === 'sprig') {
-          it.el.style.translate = `${(1 - e) * dir * 60}% ${(1 - e) * 30}px`;
-          it.el.style.rotate = `${(1 - e) * dir * 14 + (rel / vh) * dir * -4}deg`;
-          it.el.style.opacity = (0.15 + .85 * e).toFixed(3);
+        if (it.kind === 'sprig') {                                // soft bloom: fade + gentle grow + blur clearing, no slide
+          it.el.style.scale = (0.82 + .18 * e).toFixed(4);
+          it.el.style.rotate = `${(1 - e) * dir * 6 + (rel / vh) * dir * -3}deg`;
+          it.el.style.opacity = e.toFixed(3);
+          it.el.style.filter = `blur(${((1 - e) * 5).toFixed(2)}px) drop-shadow(0 6px 8px rgba(60,20,0,.18))`;
         } else {
           it.el.style.translate = `0 ${(-(1 - e) * 55).toFixed(1)}%`;
           it.el.style.opacity = e.toFixed(3);
@@ -307,9 +308,11 @@
   (() => {
     if (reduce) return;
     const cards = $$('.ev-main, .ev-flip .ev-art .arch, .ct-city');
-    cards.forEach((c, i) => {
-      c.classList.add('alive'); c.style.setProperty('--d', (i * -1.7).toFixed(1) + 's');
-      const wr = document.createElement('span'); wr.className = 'sheen-wrap'; wr.setAttribute('aria-hidden', 'true'); const sh = document.createElement('i'); sh.className = 'sheen'; wr.appendChild(sh); c.appendChild(wr);
+    cards.forEach((c, i) => { c.classList.add('alive'); c.style.setProperty('--d', (i * -1.7).toFixed(1) + 's'); });
+    // the gold sheen glides across the paintings only (not the whole card)
+    $$('.ev-art .arch').forEach((a, i) => {
+      a.style.setProperty('--d', (i * -4.5).toFixed(1) + 's');
+      const wr = document.createElement('span'); wr.className = 'sheen-wrap'; wr.setAttribute('aria-hidden', 'true'); const sh = document.createElement('i'); sh.className = 'sheen'; wr.appendChild(sh); a.appendChild(wr);
     });
     let tk = false;
     const run = () => {

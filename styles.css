@@ -909,3 +909,12 @@ body.open .scroll-cue.sc2{animation:none;opacity:1;transition:opacity .25s}
 .vg-hint{z-index:3}
 /* fallback if a phone refuses to prime: the video fades in over the identical still instead of popping */
 #gvid{transition:opacity .6s ease}
+
+/* sheen lives inside the painting arches only */
+.ev-art .arch{position:relative}
+/* sprigs: fully on-screen, stems feathered into the page so nothing looks cut */
+.fl-sprig{will-change:scale,rotate,opacity,filter}
+.fl-sprig.l{left:0;transform-origin:0% 80%;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 22%);mask-image:linear-gradient(90deg,transparent 0,#000 22%)}
+.fl-sprig.r{right:0;transform-origin:100% 80%;-webkit-mask-image:linear-gradient(270deg,transparent 0,#000 22%);mask-image:linear-gradient(270deg,transparent 0,#000 22%)}
+/* still under the video lifted by the ~2.5% browsers add when playing video, so the hand-over is invisible */
+.vg-still{filter:brightness(1.026)}
