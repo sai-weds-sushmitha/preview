@@ -854,3 +854,20 @@ body.printed .hero-inner{opacity:1!important;transform:none!important;clip-path:
 .fl-petals{position:fixed;inset:0;z-index:5;pointer-events:none}
 @media (prefers-reduced-motion:reduce){.flow,.fl-petals{display:none}}
 @media (max-width:760px){.fl-garland{display:none}}
+
+/* ===== Round 19: feathered, almost seamless reveal (no hard circle) ===== */
+#hero.bloom-from{position:relative;z-index:102;
+  -webkit-mask-image:radial-gradient(circle closest-side,#000 0%,#000 30%,rgba(0,0,0,.55) 58%,rgba(0,0,0,.18) 80%,transparent 100%);mask-image:radial-gradient(circle closest-side,#000 0%,#000 30%,rgba(0,0,0,.55) 58%,rgba(0,0,0,.18) 80%,transparent 100%);
+  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:50% 46%;mask-position:50% 46%;
+  -webkit-mask-size:0% 0%;mask-size:0% 0%;opacity:.35}
+#hero.bloom-to{-webkit-mask-size:900% 900%;mask-size:900% 900%;opacity:1;
+  transition:-webkit-mask-size 2.1s cubic-bezier(.4,0,.2,1),mask-size 2.1s cubic-bezier(.4,0,.2,1),opacity 1.2s ease-out}
+.vgate.dissolve{transition:opacity 1.6s ease .35s,filter 1.6s ease .2s;opacity:0;filter:blur(6px) brightness(1.08)}
+/* right-hand sprig uses a pre-mirrored image (no CSS flip, which pushed it off-screen) */
+.fl-sprig.r{transform:none;transform-origin:100% 100%}
+
+/* sacred turmeric thread */
+.fl-thread{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.th-line{fill:none;stroke:#e9b232;stroke-width:1.7;stroke-linecap:round}
+.th-glow{fill:none;stroke:rgba(255,206,110,.35);stroke-width:6;stroke-linecap:round;filter:blur(2px)}
+.th-bead{fill:#ffd36b;filter:drop-shadow(0 0 5px rgba(255,200,90,.95));transition:opacity .3s}

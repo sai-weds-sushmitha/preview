@@ -18,24 +18,20 @@
   const gate = $('#gate'), gvid = $('#gvid'), hero = $('#hero');
   const REVEAL_AT = 3.15, STOP_AT = 3.6;          // ribbon gone by ~3.5s; the envelope flap would start to lift at ~3.6s
   let opened = false, revealing = false, done = false;
-  // smooth reveal: the invitation (hero) is lifted above the envelope and opened as a growing circle.
-  // clip-path + transform transitions run on the compositor, so it stays smooth on phones.
-  const ring = document.createElement('i'); ring.className = 'iris2'; document.body.appendChild(ring);
+  // feathered reveal: the invitation blooms through a very soft glow from the centre while the envelope dissolves —
+  // no edge, no circle line; mask-size + opacity are animated by CSS transitions (smooth on phones).
   const irisReveal = () => {
     if (revealing) return; revealing = true;
     body.classList.add('printed', 'open'); body.classList.remove('locked'); scrollTo(0, 0); loadDeferred();
-    const R = Math.ceil(Math.hypot(innerWidth, innerHeight)) + 40;
-    hero.style.setProperty('--R', R + 'px'); ring.style.setProperty('--R', R + 'px');
-    hero.classList.add('iris-from'); ring.classList.add('on');
-    hero.getBoundingClientRect();                       // commit the start state
-    requestAnimationFrame(() => requestAnimationFrame(() => { hero.classList.add('iris-to'); ring.classList.add('go'); }));
+    hero.classList.add('bloom-from'); gate.classList.add('dissolve');
+    hero.getBoundingClientRect();
+    requestAnimationFrame(() => requestAnimationFrame(() => hero.classList.add('bloom-to')));
     const end = () => {
       if (done) return; done = true;
-      hero.classList.remove('iris-from', 'iris-to'); gate.remove(); ring.remove();
+      hero.classList.remove('bloom-from', 'bloom-to'); gate.remove();
       try { gvid && gvid.pause(); } catch (e) {}
     };
-    hero.addEventListener('transitionend', e => { if (e.propertyName === 'clip-path' || e.propertyName === '-webkit-clip-path') end(); });
-    setTimeout(end, reduce ? 50 : 2100);
+    setTimeout(end, reduce ? 50 : 2300);
   };
   const finish = () => {
     if (opened) { irisReveal(); return; }      // a second tap skips straight to the reveal
@@ -178,7 +174,7 @@
     const items = [];
     joins.forEach((sec, n) => {
       ['l', 'r'].forEach(side => {
-        const im = document.createElement('img'); im.src = 'assets/img/sprig.webp'; im.alt = ''; im.loading = 'lazy';
+        const im = document.createElement('img'); im.src = side === 'l' ? 'assets/img/sprig.webp' : 'assets/img/sprig-r.webp'; im.alt = ''; im.loading = 'lazy';
         im.className = 'fl-sprig ' + side; layer.appendChild(im);
         items.push({ el: im, sec, side, kind: 'sprig', n });
       });
@@ -216,6 +212,50 @@
     addEventListener('load', () => { place(); run(); });
     new ResizeObserver(() => { place(); run(); }).observe(document.body);
     place(); run();
+
+    // the sacred turmeric thread: one continuous line that draws itself down the page as you scroll,
+    // running down a margin through each section and crossing sides at every section join
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'fl-thread');
+    const glow = document.createElementNS(NS, 'path'), line = document.createElementNS(NS, 'path'), bead = document.createElementNS(NS, 'circle');
+    glow.setAttribute('class', 'th-glow'); line.setAttribute('class', 'th-line'); bead.setAttribute('class', 'th-bead'); bead.setAttribute('r', '3.2');
+    svg.append(glow, line, bead); layer.prepend(svg);
+    let TL = 0, lut = [];
+    const buildThread = () => {
+      const W = document.documentElement.clientWidth, docTop = scrollY;
+      const m = Math.max(8, Math.min(46, W * .025)), xs = [m, W - m];
+      const ys = joins.map(sec => sec.getBoundingClientRect().top + docTop);
+      const end = (document.querySelector('.signoff') || joins[joins.length - 1]).getBoundingClientRect().bottom + docTop - 40;
+      const band = Math.min(160, W * .3);
+      let side = 0, d = `M ${xs[side]} ${ys[0] - 60}`;
+      for (let i = 0; i < ys.length; i++) {
+        const next = i + 1 < ys.length ? ys[i + 1] : end;
+        if (i + 1 < ys.length) {
+          const a = next - band, b = next + band / 2, ns = 1 - side;
+          d += ` L ${xs[side]} ${a} C ${xs[side]} ${next}, ${xs[ns]} ${next - band * .2}, ${xs[ns]} ${b}`;
+          side = ns;
+        } else d += ` L ${xs[side]} ${next}`;
+      }
+      svg.setAttribute('width', W); svg.setAttribute('height', document.documentElement.scrollHeight);
+      glow.setAttribute('d', d); line.setAttribute('d', d);
+      TL = line.getTotalLength(); lut = [];
+      for (let l = 0; l <= TL; l += 24) lut.push([line.getPointAtLength(l).y, l]);
+      line.style.strokeDasharray = glow.style.strokeDasharray = TL + ' ' + TL;
+    };
+    const drawThread = () => {
+      if (!TL) return;
+      const yTip = scrollY + innerHeight * .78;
+      let l = 0; for (const [y, ll] of lut) { if (y <= yTip) l = ll; else break; }
+      line.style.strokeDashoffset = glow.style.strokeDashoffset = (TL - l).toFixed(1);
+      const pt = line.getPointAtLength(l); bead.setAttribute('cx', pt.x); bead.setAttribute('cy', pt.y);
+      bead.style.opacity = l > 2 && l < TL - 2 ? 1 : 0;
+    };
+    const rebuild = () => { buildThread(); drawThread(); };
+    addEventListener('scroll', () => requestAnimationFrame(drawThread), { passive: true });
+    addEventListener('resize', rebuild); addEventListener('load', rebuild);
+    new ResizeObserver(rebuild).observe(document.body);
+    document.fonts && document.fonts.ready.then(rebuild);
+    rebuild();
 
     // drifting petals across the page (very sparse, behind content edges)
     const cv = document.createElement('canvas'); cv.className = 'fl-petals'; document.body.appendChild(cv);
