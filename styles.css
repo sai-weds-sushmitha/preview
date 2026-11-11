@@ -871,3 +871,17 @@ body.printed .hero-inner{opacity:1!important;transform:none!important;clip-path:
 .th-line{fill:none;stroke:#e9b232;stroke-width:1.7;stroke-linecap:round}
 .th-glow{fill:none;stroke:rgba(255,206,110,.35);stroke-width:6;stroke-linecap:round;filter:blur(2px)}
 .th-bead{fill:#ffd36b;filter:drop-shadow(0 0 5px rgba(255,200,90,.95));transition:opacity .3s}
+/* QC fix: scroll cue lives in the hero's normal flow (never on top of the text) and fades on first scroll */
+.scroll-cue.sc2{position:relative;left:auto;bottom:auto;transform:none;align-self:center;margin:0 auto clamp(14px,2.4vh,26px);z-index:3}
+.hero-inner{padding-bottom:clamp(18px,3vh,36px)}
+body.open .scroll-cue.sc2{animation:none;opacity:1;transition:opacity .25s}
+/* client: the turmeric thread looks blunt — removed */
+.fl-thread{display:none}
+/* garlands only where they hang clear of the heading */
+@media (max-width:1100px){.fl-garland{display:none}}
+.events > .eyebrow{display:block;margin-bottom:clamp(10px,1.6vh,16px)}
+/* client: remove the gold scroll line — keep only a quiet floating label */
+.sc2 .sc-line{display:none}
+.sc2 .sc-t{animation:scFloat 2.4s ease-in-out infinite}
+@keyframes scFloat{0%,100%{transform:translateY(0);opacity:.75}50%{transform:translateY(5px);opacity:1}}
+@media (prefers-reduced-motion:reduce){.sc2 .sc-t{animation:none}}

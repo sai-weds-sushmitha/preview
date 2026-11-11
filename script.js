@@ -170,7 +170,7 @@
     if (reduce) return;
     const layer = document.createElement('div'); layer.className = 'flow'; layer.setAttribute('aria-hidden', 'true');
     document.body.appendChild(layer);
-    const joins = ['#journey', '#events', '#count', '.signoff'].map(q => $(q)).filter(Boolean);
+    const joins = ['#events'].map(q => $(q)).filter(Boolean);   // one floral moment only (client: repetitive)
     const items = [];
     joins.forEach((sec, n) => {
       ['l', 'r'].forEach(side => {
@@ -286,7 +286,7 @@
     if (reduce) return;
     const mark = (sel, f) => $$(sel).forEach(el => el.dataset.par = f);
     mark('.ev-art .arch img', .07);       // paintings float gently inside their arches
-    mark('.h-display, .vj-head', .05);    // headings glide a little slower than the page
+    // headings stay put (their drift brought them too close to the line above)
     mark('.so-mono, .count .medal, .count .cd-medal', -.06);
     const els = $$('[data-par]'), hero = $('.hero-inner');
     let tk = false;
@@ -294,7 +294,8 @@
       tk = false; const vh = innerHeight;
       if (body.classList.contains('open') && hero) {
         const y = Math.max(0, scrollY);
-        if (y < vh * 1.2) { hero.style.translate = `0 ${(y * .28).toFixed(1)}px`; hero.style.opacity = Math.max(0, 1 - y / (vh * .85)).toFixed(3); }
+        if (y < vh * 1.2) { hero.style.translate = `0 ${(-y * .12).toFixed(1)}px`; hero.style.opacity = Math.max(0, 1 - y / (vh * .7)).toFixed(3); }
+        const cue = $('.scroll-cue'); if (cue) cue.style.opacity = Math.max(0, 1 - y / 90).toFixed(3);
       }
       els.forEach(el => {
         const r = el.getBoundingClientRect(); if (r.bottom < -100 || r.top > vh + 100) return;
