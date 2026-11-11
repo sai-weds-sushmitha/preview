@@ -907,3 +907,5 @@ body.open .scroll-cue.sc2{animation:none;opacity:1;transition:opacity .25s}
 #gvid{z-index:1;opacity:0}
 .vgate.vplaying #gvid{opacity:1}
 .vg-hint{z-index:3}
+/* fallback if a phone refuses to prime: the video fades in over the identical still instead of popping */
+#gvid{transition:opacity .6s ease}

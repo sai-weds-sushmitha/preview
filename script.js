@@ -50,15 +50,23 @@
     const p = gvid.play(); if (p && p.catch) p.catch(irisReveal);
     setTimeout(irisReveal, 7000);                 // safety net
   };
-  // prime the film on load: decode and hold its first frame (muted play -> pause), then show the real video,
-  // so the tap only starts motion on the very same picture: no swap, no flash
+  // prime the film on load: decode and hold its first frame (muted play -> pause) and show the real video,
+  // so the tap only starts motion on the very same picture. Retries on every readiness event; never blocks the tap.
   (() => {
     if (!gvid) return;
-    const hold = () => { gvid.pause(); try { gvid.currentTime = 0; } catch (e) {} const on = () => gate.classList.add('vplaying');
-      gvid.requestVideoFrameCallback ? gvid.requestVideoFrameCallback(on) : setTimeout(on, 120); };
-    const prime = () => { if (opened) return; gvid.muted = true; const pr = gvid.play(); pr && pr.then ? pr.then(() => { if (!opened) hold(); }).catch(() => {}) : hold(); };
-    if (gvid.readyState >= 2) prime(); else gvid.addEventListener('loadeddata', prime, { once: true });
-    try { gvid.load(); } catch (e) {}
+    let primed = false, trying = false;
+    const show = () => gate.classList.add('vplaying');
+    const prime = () => {
+      if (primed || trying || opened || gvid.readyState < 2) return; trying = true;
+      gvid.muted = true;
+      const pr = gvid.play();
+      const hold = () => { trying = false; if (opened) return; primed = true; gvid.pause(); try { gvid.currentTime = 0; } catch (e) {}
+        gvid.requestVideoFrameCallback ? gvid.requestVideoFrameCallback(show) : setTimeout(show, 150); };
+      if (pr && pr.then) pr.then(hold).catch(() => { trying = false; }); else hold();
+    };
+    ['loadeddata', 'canplay', 'canplaythrough', 'progress'].forEach(ev => gvid.addEventListener(ev, prime));
+    const poll = setInterval(() => { if (primed || opened) clearInterval(poll); else prime(); }, 300);
+    prime();
   })();
   gate.addEventListener('click', finish);
   gate.addEventListener('keydown', e => { if (['Enter', ' ', 'ArrowDown'].includes(e.key)) { e.preventDefault(); finish(); } });
