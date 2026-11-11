@@ -43,9 +43,23 @@
       requestAnimationFrame(watch); };
     requestAnimationFrame(watch);
     gvid.addEventListener('error', irisReveal);
+    // show the video only once it is really drawing frames — the identical still underneath covers any black/flash
+    const showVid = () => gate.classList.add('vplaying');
+    if (gvid.requestVideoFrameCallback) gvid.requestVideoFrameCallback(() => showVid());
+    else gvid.addEventListener('timeupdate', function once() { if (gvid.currentTime > .05) { showVid(); gvid.removeEventListener('timeupdate', once); } });
     const p = gvid.play(); if (p && p.catch) p.catch(irisReveal);
     setTimeout(irisReveal, 7000);                 // safety net
   };
+  // prime the film on load: decode and hold its first frame (muted play -> pause), then show the real video,
+  // so the tap only starts motion on the very same picture: no swap, no flash
+  (() => {
+    if (!gvid) return;
+    const hold = () => { gvid.pause(); try { gvid.currentTime = 0; } catch (e) {} const on = () => gate.classList.add('vplaying');
+      gvid.requestVideoFrameCallback ? gvid.requestVideoFrameCallback(on) : setTimeout(on, 120); };
+    const prime = () => { if (opened) return; gvid.muted = true; const pr = gvid.play(); pr && pr.then ? pr.then(() => { if (!opened) hold(); }).catch(() => {}) : hold(); };
+    if (gvid.readyState >= 2) prime(); else gvid.addEventListener('loadeddata', prime, { once: true });
+    try { gvid.load(); } catch (e) {}
+  })();
   gate.addEventListener('click', finish);
   gate.addEventListener('keydown', e => { if (['Enter', ' ', 'ArrowDown'].includes(e.key)) { e.preventDefault(); finish(); } });
   let gy = null;
@@ -279,6 +293,27 @@
       });
     };
     requestAnimationFrame(tick);
+  })();
+
+  /* ================= living cards: gentle breathing, a soft gold sheen, and a slight scroll tilt ================= */
+  (() => {
+    if (reduce) return;
+    const cards = $$('.ev-main, .ev-flip .ev-art .arch, .ct-city');
+    cards.forEach((c, i) => {
+      c.classList.add('alive'); c.style.setProperty('--d', (i * -1.7).toFixed(1) + 's');
+      const wr = document.createElement('span'); wr.className = 'sheen-wrap'; wr.setAttribute('aria-hidden', 'true'); const sh = document.createElement('i'); sh.className = 'sheen'; wr.appendChild(sh); c.appendChild(wr);
+    });
+    let tk = false;
+    const run = () => {
+      tk = false; const vh = innerHeight;
+      cards.forEach(c => {
+        const r = c.getBoundingClientRect(); if (r.bottom < 0 || r.top > vh) return;
+        const k = (r.top + r.height / 2 - vh / 2) / vh;          // -0.5 .. 0.5 while on screen
+        c.style.setProperty('--tilt', (k * -2.2).toFixed(2) + 'deg');
+      });
+    };
+    addEventListener('scroll', () => { if (!tk) { tk = true; requestAnimationFrame(run); } }, { passive: true });
+    run();
   })();
 
   /* ================= subtle parallax while scrolling ================= */

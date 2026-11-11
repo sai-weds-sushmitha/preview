@@ -885,3 +885,25 @@ body.open .scroll-cue.sc2{animation:none;opacity:1;transition:opacity .25s}
 .sc2 .sc-t{animation:scFloat 2.4s ease-in-out infinite}
 @keyframes scFloat{0%,100%{transform:translateY(0);opacity:.75}50%{transform:translateY(5px);opacity:1}}
 @media (prefers-reduced-motion:reduce){.sc2 .sc-t{animation:none}}
+/* restore the small scroll line under the label (only the long page thread is removed) */
+.sc2 .sc-line{display:block}
+.sc2 .sc-t{animation:none;opacity:1;transform:none}
+
+/* ===== Round 21: subtle motion in the cards ===== */
+.alive{--tilt:0deg;transform:perspective(1200px) rotateX(var(--tilt));transition:transform .5s cubic-bezier(.2,.7,.2,1);animation:breathe 7s ease-in-out var(--d,0s) infinite}
+@keyframes breathe{0%,100%{translate:0 0;box-shadow:0 30px 60px rgba(61,10,14,.30)}50%{translate:0 -4px;box-shadow:0 38px 70px rgba(61,10,14,.38)}}
+.ct-city.alive,.count .cd.alive{animation-name:breatheLite}
+@keyframes breatheLite{0%,100%{translate:0 0}50%{translate:0 -3px}}
+.alive{position:relative}
+.sheen-wrap{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none;z-index:4}
+.alive .sheen{position:absolute;inset:-20% auto -20% -60%;width:38%;pointer-events:none;mix-blend-mode:soft-light;
+  background:linear-gradient(100deg,transparent 0,rgba(255,236,190,.0) 20%,rgba(255,236,190,.55) 50%,rgba(255,236,190,0) 80%,transparent 100%);
+  transform:skewX(-14deg);animation:sheen 9s ease-in-out var(--d,0s) infinite}
+@keyframes sheen{0%,62%{left:-60%}88%,100%{left:125%}}
+@media (prefers-reduced-motion:reduce){.alive,.alive .sheen{animation:none!important;transform:none!important}}
+
+/* no flash on tap: the still first frame sits under the video; the video becomes visible only once frames are drawing */
+.vg-still{z-index:0}
+#gvid{z-index:1;opacity:0}
+.vgate.vplaying #gvid{opacity:1}
+.vg-hint{z-index:3}
