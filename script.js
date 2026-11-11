@@ -14,38 +14,40 @@
   };
   addEventListener('load', () => setTimeout(loadDeferred, 2500));
 
-  /* ================= OPENING: tap the ribbon -> envelope video -> invitation ================= */
-  const gate = $('#gate'), gvid = $('#gvid');
-  let opened = false, revealed = false;
-  const inner = $('.hero-inner');
-  // the names are printed on the card: they ride in with the card in the film, then simply stay
-  const ride = k => {
-    body.classList.add('film', 'printed');
-    const e = 1 - Math.pow(1 - k, 3);
-    inner.style.opacity = Math.min(1, Math.max(0, (k - .22) / .35)).toFixed(3);
-    // on portrait screens keep the text inside the card while it widens out of the envelope
-    if (innerWidth / innerHeight < .75) { const x = Math.max(0, Math.min(1, 1 - (k - .3) / .55)) * 31; inner.style.clipPath = x > 0 ? `inset(0 ${x.toFixed(2)}% 0 ${x.toFixed(2)}%)` : 'none'; }
-    inner.style.transform = `translateY(${(1 - e) * 14}vh) scale(${(.62 + .38 * e).toFixed(4)})`;
-  };
-  const reveal = () => {
-    if (revealed) return; revealed = true;
-    body.classList.add('printed'); inner.style.opacity = 1; inner.style.transform = 'none'; inner.style.clipPath = 'none';
-    gate.classList.add('done'); body.classList.add('open'); body.classList.remove('locked');
-    scrollTo(0, 0); setTimeout(() => { gate.remove(); body.classList.remove('film'); }, 700); loadDeferred();
+  /* ================= OPENING: tap the ribbon -> ribbon slides away (video) -> soft circular reveal of the invitation ================= */
+  const gate = $('#gate'), gvid = $('#gvid'), hero = $('#hero');
+  const REVEAL_AT = 3.15, STOP_AT = 3.6;          // ribbon gone by ~3.5s; the envelope flap would start to lift at ~3.6s
+  let opened = false, revealing = false, done = false;
+  const ring = document.createElement('i'); ring.className = 'iris-ring'; document.body.appendChild(ring);
+  const irisReveal = () => {
+    if (revealing) return; revealing = true;
+    // the invitation is already there underneath: names in place, nothing re-animates
+    body.classList.add('printed', 'open'); body.classList.remove('locked'); scrollTo(0, 0); loadDeferred();
+    const R = Math.hypot(innerWidth, innerHeight) / 2 + 120, t0 = performance.now(), dur = reduce ? 1 : 1500;
+    const ez = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    gate.classList.add('iris'); ring.classList.add('on');
+    const step = now => {
+      const k = Math.min(1, (now - t0) / dur), r = ez(k) * R;
+      gate.style.setProperty('--r', r.toFixed(1) + 'px'); ring.style.setProperty('--r', r.toFixed(1) + 'px');
+      ring.style.opacity = (k < .85 ? 1 : (1 - k) / .15).toFixed(3);
+      hero.style.transform = `scale(${(1.06 - .06 * ez(k)).toFixed(4)})`;
+      if (k < 1) requestAnimationFrame(step);
+      else { done = true; gate.remove(); ring.remove(); hero.style.transform = ''; try { gvid && gvid.pause(); } catch (e) {} }
+    };
+    requestAnimationFrame(step);
   };
   const finish = () => {
-    if (opened) { reveal(); return; }          // second tap skips the rest of the video
+    if (opened) { irisReveal(); return; }      // a second tap skips straight to the reveal
     opened = true; gate.classList.add('playing'); window.__music && window.__music();
-    if (reduce || !gvid) { reveal(); return; }
-    // watch every frame: the last ~1.2s of the film is the still hero background, so hand off the moment it settles
-    const watch = () => { if (revealed) return; const d = gvid.duration, t = gvid.currentTime;
-      if (d) { if (t > d - 2.6) ride(Math.min(1, (t - (d - 2.6)) / 1.35)); if (t > d - 2) gate.classList.add('ending'); if (t > d - 1.05) { reveal(); return; } }
+    if (reduce || !gvid) { irisReveal(); return; }
+    const watch = () => { if (done) return; const t = gvid.currentTime;
+      if (t >= REVEAL_AT) irisReveal();
+      if (t >= STOP_AT) { gvid.pause(); return; }
       requestAnimationFrame(watch); };
     requestAnimationFrame(watch);
-    gvid.addEventListener('ended', reveal);
-    gvid.addEventListener('error', reveal);
-    const p = gvid.play(); if (p && p.catch) p.catch(reveal);
-    setTimeout(reveal, 11000);                    // safety net
+    gvid.addEventListener('error', irisReveal);
+    const p = gvid.play(); if (p && p.catch) p.catch(irisReveal);
+    setTimeout(irisReveal, 7000);                 // safety net
   };
   gate.addEventListener('click', finish);
   gate.addEventListener('keydown', e => { if (['Enter', ' ', 'ArrowDown'].includes(e.key)) { e.preventDefault(); finish(); } });
@@ -144,11 +146,12 @@
     const fit = () => {
       if (innerWidth / innerHeight < .8) { sec.style.minHeight = ''; art.style.top = ''; return; }
       const W = sec.clientWidth, cardsBottom = pair.getBoundingClientRect().bottom - sec.getBoundingClientRect().top;
-      const want = cardsBottom + 70;                          // lighthouse top sits 70px under the cards
+      const LM = .448;                                         // top of the tallest landmark (Kailasagiri statue)
+      const want = cardsBottom + 64;                          // ...sits 64px under the cards
       const artH = 1920 * (W / 1080);
-      const secH = Math.max(innerHeight, Math.round(want + (.80 - .585) * artH));   // show down to the sand
+      const secH = Math.max(innerHeight, Math.round(want + (.93 - LM) * artH));      // show down to the palms
       sec.style.minHeight = secH + 'px';
-      const off = Math.min(Math.max(.585 * artH - want, 0), artH - secH);
+      const off = Math.min(Math.max(LM * artH - want, 0), artH - secH);
       art.style.top = (-off) + 'px';
     };
     addEventListener('resize', fit); addEventListener('load', fit); document.fonts && document.fonts.ready.then(fit); fit();

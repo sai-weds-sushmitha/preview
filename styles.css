@@ -792,3 +792,24 @@ body.printed .telugu{opacity:.9!important}
 @keyframes swell{0%,100%{transform:translate(-.35%,0)}50%{transform:translate(.35%,-16%)}}
 @keyframes swell2{0%,100%{transform:translate(.35%,-4%)}50%{transform:translate(-.35%,-18%)}}
 @media (prefers-reduced-motion:reduce){.waves i{animation:none!important}}
+
+/* ===== Round 16: reveal-style opening (client: no window-style card opening) ===== */
+.vgate.iris{--r:0px;-webkit-mask-image:radial-gradient(circle at 50% 46%,transparent var(--r),#000 calc(var(--r) + 90px));mask-image:radial-gradient(circle at 50% 46%,transparent var(--r),#000 calc(var(--r) + 90px));transition:none;opacity:1}
+.iris-ring{--r:0px;position:fixed;inset:0;z-index:101;pointer-events:none;opacity:0;
+  background:radial-gradient(circle at 50% 46%,transparent calc(var(--r) - 6px),rgba(255,222,150,.42) calc(var(--r) + 34px),rgba(255,222,150,.12) calc(var(--r) + 70px),transparent calc(var(--r) + 110px))}
+#hero{transform-origin:50% 46%;will-change:transform}
+body.printed .hero-inner{opacity:1!important;transform:none!important;clip-path:none!important}
+/* "Shiva · Shakthi" lettering removed: keep the emblem-to-names spacing balanced */
+.hero-inner .deity{margin-bottom:clamp(16px,2.8vh,30px)}
+
+/* ===== Round 17: two-sided painting — Vizag (left, wedding) | Warangal (right, reception) ===== */
+@media (max-aspect-ratio:4/5){.ct-art{margin-top:calc(-100vw * 1.7778 * .385)}}
+.waves{top:64.375%;height:35.625%}
+.lh-glow{left:8.8%;top:52.97%;width:8%}
+.lh-beam{left:8.8%;top:52.97%;width:52%}
+.pb.b1{animation:driftS 15s ease-in-out infinite alternate,rock 3.6s ease-in-out infinite}
+.pb.b2{animation:sailN 30s ease-in-out infinite alternate,rock 3.3s ease-in-out -.9s infinite}
+.pb.b3{animation:driftS 18s ease-in-out -7s infinite alternate,rock 4s ease-in-out -1.6s infinite}
+@keyframes sailN{from{left:3%}to{left:21%}}
+@keyframes driftS{from{left:calc(var(--x0) - 1.8%)}to{left:calc(var(--x0) + 1.8%)}}
+.bd.k1{top:40.5%}.bd.k2{top:41.8%}.bd.k3{top:42.6%}
