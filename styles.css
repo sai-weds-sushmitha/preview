@@ -918,3 +918,7 @@ body.open .scroll-cue.sc2{animation:none;opacity:1;transition:opacity .25s}
 .fl-sprig.r{right:0;transform-origin:100% 80%;-webkit-mask-image:linear-gradient(270deg,transparent 0,#000 22%);mask-image:linear-gradient(270deg,transparent 0,#000 22%)}
 /* still under the video lifted by the ~2.5% browsers add when playing video, so the hand-over is invisible */
 .vg-still{filter:brightness(1.026)}
+
+/* ===== Round 23: Woven Bold SS monogram (tall 345.8 x 400) ===== */
+.medal-mono{width:38%;height:44%;margin-top:0}
+.so-mono{width:clamp(70px,14vw,104px);height:clamp(81px,16.2vw,120px)}
