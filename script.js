@@ -16,39 +16,42 @@
 
   /* ================= OPENING: tap the ribbon -> ribbon slides away (video) -> soft circular reveal of the invitation ================= */
   const gate = $('#gate'), gvid = $('#gvid'), hero = $('#hero');
-  // Round 24c: the envelope film carries its own transparency (colour | alpha side by side) and is drawn with WebGL
-  // OVER the live invitation, so the card that appears as the flaps open IS the real page (names already printed) —
-  // no hand-off, nothing to cut to. Fallback (no WebGL): the plain film + soft fade.
-  const TAKE = '';
-  const OPEN_AT = 3.5;                              // flap starts lifting: page under the envelope must be ready
-  // Round 25 (client): no extra steps — ribbon falls, flap opens, then the card simply melts into view from the top
-  // (names already printed). The film holds once the flap is up, before its side panels would move.
-  const REVEAL_FROM = 102 / 24, HOLD_AT = 107 / 24, REVEAL_MS = 2800;
-  let gl = null, glDraw = null, glWipe = null;
+  // Round 26 (client ref reel): ribbon film -> the envelope splits along a horizontal line and the two halves glide
+  // apart (top up, bottom down) like doors, revealing the LIVE invitation underneath; emblem + names fade in as it opens.
+  // Drawn with WebGL from the paused film frame, so the split is pixel-exact and perfectly smooth. Fallback: soft fade.
+  const HOLD_AT = 3.56, HOLD_T = 3.604;            // film frame 86: ribbon gone, flap flat
+  const CUT = .5, SPLIT_MS = 1900;                 // split line (fraction of the envelope height), opening time
+  let gl = null, glDraw = null, glSplit = null;
   (() => {
     if (!gvid) return;
     const cv = document.createElement('canvas'); cv.className = 'vg-vid vg-gl'; cv.setAttribute('aria-hidden', 'true');
     let g; try { g = cv.getContext('webgl', { premultipliedAlpha: true, alpha: true, antialias: false }); } catch (e) {}
-    if (!g) { gvid.src = 'assets/video/opening-r24' + TAKE + '.mp4'; return; }
+    if (!g) return;
     const sh = (t, s) => { const o = g.createShader(t); g.shaderSource(o, s); g.compileShader(o); return o; };
     const pr = g.createProgram();
     g.attachShader(pr, sh(g.VERTEX_SHADER, 'attribute vec2 p;uniform vec4 r;varying vec2 v;void main(){v=vec2(p.x,1.0-p.y);gl_Position=vec4(r.xy+p*r.zw,0.0,1.0);}'));
-    g.attachShader(pr, sh(g.FRAGMENT_SHADER, 'precision mediump float;uniform sampler2D t;uniform float w;varying vec2 v;void main(){vec3 c=texture2D(t,vec2(v.x*0.5,v.y)).rgb;float a=texture2D(t,vec2(0.5+v.x*0.5,v.y)).r;a*=smoothstep(w-0.45,w,v.y);gl_FragColor=vec4(c*a,a);}'));
-    g.linkProgram(pr); if (!g.getProgramParameter(pr, g.LINK_STATUS)) { gvid.src = 'assets/video/opening-r24' + TAKE + '.mp4'; return; }
+    g.attachShader(pr, sh(g.FRAGMENT_SHADER, [
+      'precision mediump float;uniform sampler2D t;uniform float s;uniform float c;varying vec2 v;',
+      'void main(){float y=v.y;float eT=c-s*(c+0.06);float eB=c+s*(1.0-c+0.06);',
+      'if(s<=0.0||y<eT){vec3 col=texture2D(t,vec2(v.x,y+(c-eT))).rgb;col*=1.0-0.16*smoothstep(eT-0.035,eT,y)*step(0.0001,s);gl_FragColor=vec4(col,1.0);}',
+      'else if(y>eB){vec3 col=texture2D(t,vec2(v.x,y-(eB-c))).rgb;col*=1.0-0.16*smoothstep(eB+0.035,eB,y)*step(0.0001,s);gl_FragColor=vec4(col,1.0);}',
+      'else{float a=0.32*max(1.0-smoothstep(eT,eT+0.045,y),smoothstep(eB-0.045,eB,y))*(1.0-smoothstep(0.85,1.0,s));gl_FragColor=vec4(0.0,0.0,0.0,a);}}'
+    ].join('')));
+    g.linkProgram(pr); if (!g.getProgramParameter(pr, g.LINK_STATUS)) return;
     g.useProgram(pr);
     const b = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, b); g.bufferData(g.ARRAY_BUFFER, new Float32Array([0,0,1,0,0,1,1,1]), g.STATIC_DRAW);
     const loc = g.getAttribLocation(pr, 'p'); g.enableVertexAttribArray(loc); g.vertexAttribPointer(loc, 2, g.FLOAT, false, 0, 0);
     const tx = g.createTexture(); g.bindTexture(g.TEXTURE_2D, tx);
     [g.TEXTURE_WRAP_S, g.TEXTURE_WRAP_T].forEach(k => g.texParameteri(g.TEXTURE_2D, k, g.CLAMP_TO_EDGE));
     g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.LINEAR); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.LINEAR);
-    const uR = g.getUniformLocation(pr, 'r'), uW = g.getUniformLocation(pr, 'w'); g.uniform1f(uW, -1);
-    glWipe = x => g.uniform1f(uW, x);
+    const uR = g.getUniformLocation(pr, 'r'), uS = g.getUniformLocation(pr, 's');
+    g.uniform1f(uS, 0); g.uniform1f(g.getUniformLocation(pr, 'c'), CUT);
+    glSplit = x => g.uniform1f(uS, x);
     const size = () => {           // same framing as the old <video>: cover on phones, contain on wide screens, 45% vertical
       const dpr = Math.min(devicePixelRatio || 1, 2), W = gate.clientWidth, H = gate.clientHeight;
       cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); g.viewport(0, 0, cv.width, cv.height);
       const vw = 720, vh = 1294, s = matchMedia('(min-aspect-ratio:3/4)').matches ? Math.min(W / vw, H / vh) : Math.max(W / vw, H / vh);
       const w = vw * s, h = vh * s, x = (W - w) / 2, y = (H - h) * .45;
-      // clip space: left, bottom, width, height (quad p.y=0 is the bottom edge)
       g.uniform4f(uR, x / W * 2 - 1, 1 - (y + h) / H * 2, w / W * 2, h / H * 2);
     };
     size(); addEventListener('resize', size);
@@ -57,15 +60,15 @@
       try { g.texImage2D(g.TEXTURE_2D, 0, g.RGB, g.RGB, g.UNSIGNED_BYTE, gvid); } catch (e) { return false; }
       g.clearColor(0, 0, 0, 0); g.clear(g.COLOR_BUFFER_BIT); g.drawArrays(g.TRIANGLE_STRIP, 0, 4); return true;
     };
-    gvid.src = 'assets/video/opening-d24' + TAKE + '.mp4';
     gvid.after(cv); gate.classList.add('gl'); gl = g;
   })();
-  let opened = false, revealing = false, done = false, under = false, wipeT0 = 0;
-  // the live page goes under the envelope (names printed, no entrance animation) — it is simply there when the flaps open
+  let opened = false, revealing = false, done = false, under = false, splitT0 = 0;
+  // the live page goes under the envelope as the split starts; emblem + names fade in (body.open.r24 delays)
   const pageUnder = () => {
     if (under) return; under = true;
-    body.classList.add('open', 'printed', 'r24'); scrollTo(0, 0); loadDeferred();
+    body.classList.add('open', 'r24'); scrollTo(0, 0); loadDeferred();
     gate.classList.add('see');
+    setTimeout(() => body.classList.add('r24done'), 4200);
   };
   const closeGate = () => {
     if (done) return; done = true;
@@ -74,36 +77,56 @@
   };
   // fallback (no WebGL / no video / skip): soft fade onto the page, names write in
   const irisReveal = () => {
-    if (revealing) return; revealing = true;
-    if (gl && opened && !reduce) { pageUnder(); gate.classList.add('soft'); setTimeout(closeGate, 700); return; }
-    body.classList.add('open', 'r24'); scrollTo(0, 0); loadDeferred();
-    gate.classList.add('soft');
-    setTimeout(() => body.classList.add('r24done'), 4200);
+    if (revealing || splitT0) return; revealing = true;
+    pageUnder(); gate.classList.add('soft');
     setTimeout(closeGate, reduce ? 50 : 1000);
   };
+  // Round 26: the ribbon tied a gatefold — once it has fallen, the envelope's two halves swing open like a book along the
+  // ribbon line (3D, hinged at the envelope's outer edges, light falling off as they turn), onto the live invitation.
+  const DOOR_MS = 2400;
+  const openDoors = () => {
+    if (splitT0 || revealing) return; splitT0 = performance.now();
+    const W = gate.clientWidth, H = gate.clientHeight, dpr = Math.min(devicePixelRatio || 1, 2);
+    const vw = 720, vh = 1294, s = matchMedia('(min-aspect-ratio:3/4)').matches ? Math.min(W / vw, H / vh) : Math.max(W / vw, H / vh);
+    const fw = vw * s, fh = vh * s, fx = (W - fw) / 2, fy = (H - fh) * .45, cx = fx + fw / 2;
+    $$('.vg-doors canvas').forEach((c, i) => {
+      c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
+      const x = c.getContext('2d'); x.scale(dpr, dpr);
+      x.save(); x.beginPath(); i ? x.rect(cx, 0, W - cx, H) : x.rect(0, 0, cx, H); x.clip();
+      try { x.drawImage(gvid, fx, fy, fw, fh); } catch (e) {}
+      x.restore();
+    });
+    const d = gate.querySelector('.vg-doors');
+    d.style.setProperty('--hl', fx + 'px'); d.style.setProperty('--hr', (fx + fw) + 'px'); d.style.setProperty('--cx', cx + 'px');
+    d.style.setProperty('--persp', Math.round(fw * 2.2) + 'px');
+    gate.classList.add('doors');                       // doors replace the film canvas on the very same pixels
+    pageUnder();
+    requestAnimationFrame(() => requestAnimationFrame(() => gate.classList.add('opening')));
+    setTimeout(closeGate, DOOR_MS + 150);
+  };
+  const startSplit = openDoors;
   const finish = () => {
-    if (opened) { irisReveal(); return; }      // a second tap skips straight to the card
+    if (opened) { if (!splitT0) irisReveal(); return; }   // a second tap skips straight to the card
     opened = true; gate.classList.add('playing'); window.__music && window.__music();
     if (reduce || !gvid) { irisReveal(); return; }
+    let holding = false;
     const watch = () => { if (done || revealing) return;
-      const t = gvid.currentTime, d = gvid.duration || 99;
+      const t = gvid.currentTime;
       if (gl) {
-        if (t >= OPEN_AT) pageUnder();
-        if (t >= REVEAL_FROM && !wipeT0) wipeT0 = performance.now();
-        if (t >= HOLD_AT && !gvid.paused) gvid.pause();
-        if (wipeT0) { let x = Math.min(1, (performance.now() - wipeT0) / REVEAL_MS); x = x * x * (3 - 2 * x); glWipe(x * 1.45); }
+        if (!holding && t >= HOLD_AT) {
+          holding = true; gvid.pause();
+          let ok = false; const go = () => { if (ok) return; ok = true; startSplit(); };
+          gvid.addEventListener('seeked', go, { once: true });
+          try { gvid.currentTime = HOLD_T; } catch (e) { go(); }
+          setTimeout(go, 300);
+        }
+        if (splitT0) return;                           // doors have taken over
         if (glDraw()) gate.classList.add('vplaying');
-        if (wipeT0 && performance.now() - wipeT0 >= REVEAL_MS) { closeGate(); return; }
         requestAnimationFrame(watch); return;
       }
-      if (gvid.ended || t >= d - .06) {
-        gvid.pause();
-        if (gl) { glDraw(); requestAnimationFrame(closeGate); }   // last frame is fully transparent: the page is already showing
-        else irisReveal();
-        return; }
+      if (gvid.ended || t >= HOLD_AT) { gvid.pause(); irisReveal(); return; }
       requestAnimationFrame(watch); };
     requestAnimationFrame(watch);
-    gvid.addEventListener('ended', () => { if (gl) { glDraw(); pageUnder(); closeGate(); } else irisReveal(); });
     gvid.addEventListener('error', irisReveal);
     if (!gl) {
       const showVid = () => gate.classList.add('vplaying');
@@ -111,7 +134,7 @@
       else gvid.addEventListener('timeupdate', function once() { if (gvid.currentTime > .05) { showVid(); gvid.removeEventListener('timeupdate', once); } });
     }
     const p = gvid.play(); if (p && p.catch) p.catch(irisReveal);
-    setTimeout(irisReveal, 15000);                // safety net
+    setTimeout(() => { if (!splitT0) irisReveal(); }, 9000);     // safety net
   };
   // prime the film on load: decode and hold its first frame (muted play -> pause) and show the real video,
   // so the tap only starts motion on the very same picture. Retries on every readiness event; never blocks the tap.
