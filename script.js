@@ -16,11 +16,12 @@
 
   /* ================= OPENING: tap the ribbon -> ribbon slides away (video) -> soft circular reveal of the invitation ================= */
   const gate = $('#gate'), gvid = $('#gvid'), hero = $('#hero');
-  const FLAP_AT = 3.56, FLAP_T = 3.604;           // film frame 86 (3.583-3.625s): ribbon gone, flap still flat = env-flap-r24.webp
-  const flapImg = $('.vg-flap');
+  // preview only: ?take=2 plays the second opening film for comparison
+  if (gvid && /[?&]take=2\b/.test(location.search)) gvid.src = 'assets/video/opening-r24b.mp4';
   let opened = false, revealing = false, done = false;
-  // Round 24 (client: no flashy ring): the envelope dissolves softly (opacity only, no glow/blur/mask) onto the maroon card,
-  // then the emblem and names write themselves in one after another (body.open.r24 delays in CSS).
+  // Round 24 (client ref reel): ONE continuous film — ribbon slides off, the envelope unfolds like real paper and ends on the
+  // bare maroon card (same picture as the hero background). Hand-off is a gentle opacity fade between matching frames,
+  // then the emblem and names write themselves in (body.open.r24 delays in CSS). No mask, no glow, no ring.
   const irisReveal = () => {
     if (revealing) return; revealing = true;
     body.classList.add('open', 'r24'); body.classList.remove('locked'); scrollTo(0, 0); loadDeferred();
@@ -31,45 +32,25 @@
       gate.remove();
       try { gvid && gvid.pause(); } catch (e) {}
     };
-    setTimeout(end, reduce ? 50 : 1800);
-  };
-  // the flap folds open (3D, hinged on its top edge, like the reference), then the envelope dissolves
-  let flapping = false, drawnMT = 0;
-  const openFlap = () => {
-    if (flapping || revealing) return; flapping = true;
-    // hinge = top edge of the painted frame (object-fit cover/contain + object-position 45%)
-    const W = gate.clientWidth, H = gate.clientHeight, vw = 720, vh = 1294;
-    const s = matchMedia('(min-aspect-ratio:3/4)').matches ? Math.min(W / vw, H / vh) : Math.max(W / vw, H / vh);
-    gate.style.setProperty('--fo', ((H - vh * s) * .45) + 'px');
-    gate.classList.add('flap');
-    requestAnimationFrame(() => requestAnimationFrame(() => gate.classList.add('flap-open')));
-    setTimeout(irisReveal, 560);
+    setTimeout(end, reduce ? 50 : 1000);
   };
   const finish = () => {
-    if (opened) { irisReveal(); return; }      // a second tap skips straight to the reveal
+    if (opened) { irisReveal(); return; }      // a second tap skips straight to the card
     opened = true; gate.classList.add('playing'); window.__music && window.__music();
     if (reduce || !gvid) { irisReveal(); return; }
-    const watch = () => { if (done || flapping || revealing) return; const t = gvid.currentTime;
-      if (t >= FLAP_AT) {
-        gvid.pause();
-        // flap only if the film really drew its frames up to the hand-off (else the flap would not match what is on screen)
-        if (!flapImg || !flapImg.complete || (gvid.requestVideoFrameCallback && drawnMT < 3.3)) { irisReveal(); return; }
-        if (Math.abs(t - FLAP_T) < .02) { openFlap(); return; }
-        let ok = false; const go = () => { if (ok) return; ok = true; openFlap(); };
-        gvid.addEventListener('seeked', () => (gvid.requestVideoFrameCallback ? gvid.requestVideoFrameCallback(go) : go()), { once: true });
-        try { gvid.currentTime = FLAP_T; } catch (e) { go(); }
-        setTimeout(go, 300);
-        return; }
+    const watch = () => { if (done || revealing) return;
+      const d = gvid.duration || 99;
+      if (gvid.ended || gvid.currentTime >= d - .06) { gvid.pause(); irisReveal(); return; }
       requestAnimationFrame(watch); };
-    if (gvid.requestVideoFrameCallback) { const tick = (n, m) => { drawnMT = m.mediaTime; if (!flapping && !revealing) gvid.requestVideoFrameCallback(tick); }; gvid.requestVideoFrameCallback(tick); }
     requestAnimationFrame(watch);
+    gvid.addEventListener('ended', irisReveal);
     gvid.addEventListener('error', irisReveal);
     // show the video only once it is really drawing frames — the identical still underneath covers any black/flash
     const showVid = () => gate.classList.add('vplaying');
     if (gvid.requestVideoFrameCallback) gvid.requestVideoFrameCallback(() => showVid());
     else gvid.addEventListener('timeupdate', function once() { if (gvid.currentTime > .05) { showVid(); gvid.removeEventListener('timeupdate', once); } });
     const p = gvid.play(); if (p && p.catch) p.catch(irisReveal);
-    setTimeout(irisReveal, 7000);                 // safety net
+    setTimeout(irisReveal, 14000);                // safety net
   };
   // prime the film on load: decode and hold its first frame (muted play -> pause) and show the real video,
   // so the tap only starts motion on the very same picture. Retries on every readiness event; never blocks the tap.
