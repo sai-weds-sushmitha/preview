@@ -975,3 +975,79 @@ body.open.r24 .n2{animation:nameIn 1.3s var(--ease) 1.3s forwards}
 body.open.r24 .tagline{animation:nameIn 1.2s var(--ease) 1.75s forwards}
 body.open.r24 .date-line{animation:fade 1.1s ease 2.05s forwards}
 @media (prefers-reduced-motion:reduce){body.r24 .hero-inner{animation:none}}
+
+/* ===== Round 27: door opener (no ribbon, no film) ===== */
+.dgate{display:block;background:transparent;perspective:120vw;perspective-origin:50% 46%;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:none}
+@media (orientation:landscape){.dgate{perspective:120vw}}
+.dg-shade{position:absolute;inset:0;background:radial-gradient(70% 60% at 50% 46%,rgba(12,0,3,.15),rgba(12,0,3,.6));opacity:1;pointer-events:none}
+.dg-door{position:absolute;top:0;bottom:0;width:50%;-webkit-backface-visibility:hidden;backface-visibility:hidden;will-change:transform}
+.dg-l{left:0;transform-origin:0 50%}
+.dg-r{right:0;transform-origin:100% 50%}
+.dg-face{position:absolute;inset:0;overflow:hidden;
+  background:url('assets/img/kalamkari.webp') center/560px,radial-gradient(130% 75% at 100% 46%,#741a1e 0%,#4c0d11 50%,#2c0508 100%);background-blend-mode:screen,normal}
+.dg-r .dg-face{background:url('assets/img/kalamkari.webp') center/560px,radial-gradient(130% 75% at 0% 46%,#741a1e 0%,#4c0d11 50%,#2c0508 100%);background-blend-mode:screen,normal}
+.dg-face::before{content:"";position:absolute;inset:0;background:inherit;opacity:0}
+.dg-face{box-shadow:inset 0 0 0 9999px rgba(61,10,14,.0)}
+/* kalamkari texture kept as faint as on the card */
+.dg-face{background-size:560px,auto}
+.dg-face::after{content:"";position:absolute;inset:0;opacity:0;pointer-events:none}
+.dg-l .dg-face::after{background:linear-gradient(90deg,rgba(20,2,6,0) 15%,rgba(20,2,6,.65))}
+.dg-r .dg-face::after{background:linear-gradient(270deg,rgba(20,2,6,0) 15%,rgba(20,2,6,.65))}
+.dg-band{position:absolute;left:0;right:0}
+.dg-bt{top:0}.dg-bb{bottom:0}
+.dg-l .dg-band{background-position:right center}.dg-r .dg-band{background-position:left center}
+.dg-frame{position:absolute;top:calc(clamp(46px,7vw,70px) + 14px);bottom:calc(clamp(46px,7vw,70px) + 14px);border:1px solid rgba(240,196,106,.55);box-shadow:inset 0 0 0 4px rgba(61,10,14,.0),inset 0 0 0 5px rgba(240,196,106,.28)}
+.dg-l .dg-frame{left:14px;right:-1px;border-right:0}
+.dg-r .dg-frame{right:14px;left:-1px;border-left:0}
+.dg-garland{position:absolute;top:calc(clamp(46px,7vw,70px) - 6px);width:clamp(30px,8vw,54px);height:auto;filter:drop-shadow(0 8px 10px rgba(0,0,0,.35));transform-origin:50% 0;animation:dgSway 5s ease-in-out infinite}
+.dg-l .dg-garland{left:clamp(22px,6vw,48px)}
+.dg-r .dg-garland{right:clamp(22px,6vw,48px);animation-delay:-2.5s}
+@keyframes dgSway{0%,100%{transform:rotate(-1.2deg)}50%{transform:rotate(1.2deg)}}
+.dg-sprig{position:absolute;bottom:calc(clamp(46px,7vw,70px) + 18px);width:min(46vw,300px);height:auto;opacity:.95}
+.dg-l .dg-sprig{left:-4%;clip-path:inset(0 50% 0 0)}
+.dg-r .dg-sprig{right:-4%;clip-path:inset(0 0 0 50%)}
+/* seam: two hairlines of gold where the doors meet */
+.dg-l .dg-face{box-shadow:inset -1px 0 0 rgba(240,196,106,.6),inset -10px 0 18px -10px rgba(0,0,0,.45)}
+.dg-r .dg-face{box-shadow:inset 1px 0 0 rgba(240,196,106,.6),inset 10px 0 18px -10px rgba(0,0,0,.45)}
+/* the card band across both doors */
+.dg-card{position:absolute;left:50%;top:46%;width:min(78vw,380px);transform:translate(-50%,-50%);padding:clamp(22px,5vw,32px) 22px clamp(20px,4.5vw,28px);
+  display:flex;flex-direction:column;align-items:center;gap:clamp(10px,2.4vw,14px);text-align:center;border-radius:6px;
+  background:linear-gradient(180deg,#fbf4e4,#f3e6cb);box-shadow:0 0 0 1px #c9a24f,0 0 0 6px #fbf4e4,0 0 0 7px rgba(201,162,79,.8),0 24px 50px rgba(0,0,0,.45);will-change:transform,opacity}
+.dg-with{font-family:var(--f-caps);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#8e5d16;line-height:1.6}
+.dg-mono{width:clamp(64px,17vw,86px);height:auto;--mf:url(#bronzeGrad)}
+.dg-tap{display:inline-flex;align-items:center;gap:.6em;font-family:var(--f-caps);font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:#6b1418;padding:.7em 1.3em;border:1px solid rgba(143,29,27,.35);border-radius:999px}
+.dg-dot{width:7px;height:7px;border-radius:50%;background:#b8862e;box-shadow:0 0 0 0 rgba(184,134,46,.6);animation:vgPulse 1.6s infinite}
+/* open: card glides up and away, then the doors swing like a book (light falling off as they turn) */
+.dgate.go{pointer-events:none}
+.dgate.go .dg-card{animation:dgCard .95s cubic-bezier(.65,0,.35,1) forwards}
+.dgate.go .dg-l{animation:dgL 2.1s cubic-bezier(.6,0,.3,1) .6s forwards}
+.dgate.go .dg-r{animation:dgR 2.1s cubic-bezier(.6,0,.3,1) .6s forwards}
+.dgate.go .dg-face::after{animation:fade 2.1s cubic-bezier(.6,0,.3,1) .6s forwards}
+.dgate.go .dg-shade{animation:dgShade 2.2s ease .6s forwards}
+@keyframes dgCard{to{transform:translate(-50%,calc(-50% - 60vh));opacity:0}}
+@keyframes dgL{to{transform:rotateY(-100deg)}}
+@keyframes dgR{to{transform:rotateY(100deg)}}
+@keyframes dgShade{to{opacity:0}}
+body.r24 .hero-inner{animation:cardSettle 2.6s cubic-bezier(.22,.61,.36,1) both}
+@media (prefers-reduced-motion:reduce){.dgate.go .dg-card,.dgate.go .dg-l,.dgate.go .dg-r{animation-duration:.01s;animation-delay:0s}.dgate.go{opacity:0;transition:opacity .4s}}
+/* door face: same maroon + faint kalamkari as the card */
+.dg-face,.dg-r .dg-face{background:radial-gradient(140% 80% at 100% 46%,#7a1a1c 0%,#55100f 48%,#2e0608 100%)}
+.dg-r .dg-face{background:radial-gradient(140% 80% at 0% 46%,#7a1a1c 0%,#55100f 48%,#2e0608 100%)}
+.dg-face::before{background:url('assets/img/kalamkari.webp') center/560px;opacity:.07;mix-blend-mode:screen}
+.dg-rule{display:block;width:72px;height:9px;background:linear-gradient(90deg,transparent,#b8862e 30%,#b8862e 70%,transparent) center/100% 1px no-repeat;position:relative}
+.dg-rule::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;background:#b8862e;transform:translate(-50%,-50%) rotate(45deg)}
+.dg-card{gap:clamp(12px,3vw,16px);width:min(64vw,300px)}
+.dg-mono{width:clamp(70px,19vw,92px)}
+/* brass ring pulls beside the seam */
+.dg-ring{position:absolute;top:66%;width:clamp(26px,6.5vw,40px);aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle,transparent 52%,#7a5418 54%,#f1d58f 60%,#b8862e 68%,#6b4612 74%,transparent 76%);filter:drop-shadow(0 3px 3px rgba(0,0,0,.45))}
+.dg-ring::before{content:"";position:absolute;left:50%;top:-14%;width:30%;height:30%;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle at 40% 35%,#f6e2a8,#a8761f 60%,#5e3d0e)}
+.dg-l .dg-ring{right:clamp(10px,3vw,18px)}
+.dg-r .dg-ring{left:clamp(10px,3vw,18px)}
+.dg-garland.in{display:none}
+@media (min-width:760px){
+  .dg-garland.in{display:block;width:clamp(30px,3.2vw,48px);animation-duration:6s}
+  .dg-l .dg-garland.in{left:auto;right:clamp(70px,9vw,150px);animation-delay:-1.2s;clip-path:inset(0 0 38% 0)}
+  .dg-r .dg-garland.in{right:auto;left:clamp(70px,9vw,150px);animation-delay:-3.7s;clip-path:inset(0 0 38% 0)}
+  .dg-sprig{width:min(30vw,360px)}
+}
