@@ -16,31 +16,52 @@
 
   /* ================= OPENING: tap the ribbon -> ribbon slides away (video) -> soft circular reveal of the invitation ================= */
   const gate = $('#gate'), gvid = $('#gvid'), hero = $('#hero');
-  const REVEAL_AT = 3.15, STOP_AT = 3.6;          // ribbon gone by ~3.5s; the envelope flap would start to lift at ~3.6s
+  const FLAP_AT = 3.56, FLAP_T = 3.604;           // film frame 86 (3.583-3.625s): ribbon gone, flap still flat = env-flap-r24.webp
+  const flapImg = $('.vg-flap');
   let opened = false, revealing = false, done = false;
-  // feathered reveal: the invitation blooms through a very soft glow from the centre while the envelope dissolves —
-  // no edge, no circle line; mask-size + opacity are animated by CSS transitions (smooth on phones).
+  // Round 24 (client: no flashy ring): the envelope dissolves softly (opacity only, no glow/blur/mask) onto the maroon card,
+  // then the emblem and names write themselves in one after another (body.open.r24 delays in CSS).
   const irisReveal = () => {
     if (revealing) return; revealing = true;
-    body.classList.add('printed', 'open'); body.classList.remove('locked'); scrollTo(0, 0); loadDeferred();
-    hero.classList.add('bloom-from'); gate.classList.add('dissolve');
-    hero.getBoundingClientRect();
-    requestAnimationFrame(() => requestAnimationFrame(() => hero.classList.add('bloom-to')));
+    body.classList.add('open', 'r24'); body.classList.remove('locked'); scrollTo(0, 0); loadDeferred();
+    gate.classList.add('soft');
+    setTimeout(() => body.classList.add('r24done'), 4200);
     const end = () => {
       if (done) return; done = true;
-      hero.classList.remove('bloom-from', 'bloom-to'); gate.remove();
+      gate.remove();
       try { gvid && gvid.pause(); } catch (e) {}
     };
-    setTimeout(end, reduce ? 50 : 2300);
+    setTimeout(end, reduce ? 50 : 1800);
+  };
+  // the flap folds open (3D, hinged on its top edge, like the reference), then the envelope dissolves
+  let flapping = false, drawnMT = 0;
+  const openFlap = () => {
+    if (flapping || revealing) return; flapping = true;
+    // hinge = top edge of the painted frame (object-fit cover/contain + object-position 45%)
+    const W = gate.clientWidth, H = gate.clientHeight, vw = 720, vh = 1294;
+    const s = matchMedia('(min-aspect-ratio:3/4)').matches ? Math.min(W / vw, H / vh) : Math.max(W / vw, H / vh);
+    gate.style.setProperty('--fo', ((H - vh * s) * .45) + 'px');
+    gate.classList.add('flap');
+    requestAnimationFrame(() => requestAnimationFrame(() => gate.classList.add('flap-open')));
+    setTimeout(irisReveal, 560);
   };
   const finish = () => {
     if (opened) { irisReveal(); return; }      // a second tap skips straight to the reveal
     opened = true; gate.classList.add('playing'); window.__music && window.__music();
     if (reduce || !gvid) { irisReveal(); return; }
-    const watch = () => { if (done) return; const t = gvid.currentTime;
-      if (t >= REVEAL_AT) irisReveal();
-      if (t >= STOP_AT) { gvid.pause(); return; }
+    const watch = () => { if (done || flapping || revealing) return; const t = gvid.currentTime;
+      if (t >= FLAP_AT) {
+        gvid.pause();
+        // flap only if the film really drew its frames up to the hand-off (else the flap would not match what is on screen)
+        if (!flapImg || !flapImg.complete || (gvid.requestVideoFrameCallback && drawnMT < 3.3)) { irisReveal(); return; }
+        if (Math.abs(t - FLAP_T) < .02) { openFlap(); return; }
+        let ok = false; const go = () => { if (ok) return; ok = true; openFlap(); };
+        gvid.addEventListener('seeked', () => (gvid.requestVideoFrameCallback ? gvid.requestVideoFrameCallback(go) : go()), { once: true });
+        try { gvid.currentTime = FLAP_T; } catch (e) { go(); }
+        setTimeout(go, 300);
+        return; }
       requestAnimationFrame(watch); };
+    if (gvid.requestVideoFrameCallback) { const tick = (n, m) => { drawnMT = m.mediaTime; if (!flapping && !revealing) gvid.requestVideoFrameCallback(tick); }; gvid.requestVideoFrameCallback(tick); }
     requestAnimationFrame(watch);
     gvid.addEventListener('error', irisReveal);
     // show the video only once it is really drawing frames — the identical still underneath covers any black/flash
