@@ -53,7 +53,7 @@
       try { g.texImage2D(g.TEXTURE_2D, 0, g.RGB, g.RGB, g.UNSIGNED_BYTE, gvid); } catch (e) { return false; }
       g.clearColor(0, 0, 0, 0); g.clear(g.COLOR_BUFFER_BIT); g.drawArrays(g.TRIANGLE_STRIP, 0, 4); return true;
     };
-    gvid.src = 'assets/video/opening-a24' + TAKE + '.mp4';
+    gvid.src = 'assets/video/opening-d24' + TAKE + '.mp4';
     gvid.after(cv); gate.classList.add('gl'); gl = g;
   })();
   let opened = false, revealing = false, done = false, under = false;
