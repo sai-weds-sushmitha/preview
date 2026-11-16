@@ -19,9 +19,12 @@
   // Round 24c: the envelope film carries its own transparency (colour | alpha side by side) and is drawn with WebGL
   // OVER the live invitation, so the card that appears as the flaps open IS the real page (names already printed) —
   // no hand-off, nothing to cut to. Fallback (no WebGL): the plain film + soft fade.
-  const TAKE = /[?&]take=2\b/.test(location.search) ? 'b' : '';
+  const TAKE = '';
   const OPEN_AT = 3.5;                              // flap starts lifting: page under the envelope must be ready
-  let gl = null, glDraw = null;
+  // Round 25 (client): no extra steps — ribbon falls, flap opens, then the card simply melts into view from the top
+  // (names already printed). The film holds once the flap is up, before its side panels would move.
+  const REVEAL_FROM = 102 / 24, HOLD_AT = 107 / 24, REVEAL_MS = 2800;
+  let gl = null, glDraw = null, glWipe = null;
   (() => {
     if (!gvid) return;
     const cv = document.createElement('canvas'); cv.className = 'vg-vid vg-gl'; cv.setAttribute('aria-hidden', 'true');
@@ -30,7 +33,7 @@
     const sh = (t, s) => { const o = g.createShader(t); g.shaderSource(o, s); g.compileShader(o); return o; };
     const pr = g.createProgram();
     g.attachShader(pr, sh(g.VERTEX_SHADER, 'attribute vec2 p;uniform vec4 r;varying vec2 v;void main(){v=vec2(p.x,1.0-p.y);gl_Position=vec4(r.xy+p*r.zw,0.0,1.0);}'));
-    g.attachShader(pr, sh(g.FRAGMENT_SHADER, 'precision mediump float;uniform sampler2D t;varying vec2 v;void main(){vec3 c=texture2D(t,vec2(v.x*0.5,v.y)).rgb;float a=texture2D(t,vec2(0.5+v.x*0.5,v.y)).r;gl_FragColor=vec4(c*a,a);}'));
+    g.attachShader(pr, sh(g.FRAGMENT_SHADER, 'precision mediump float;uniform sampler2D t;uniform float w;varying vec2 v;void main(){vec3 c=texture2D(t,vec2(v.x*0.5,v.y)).rgb;float a=texture2D(t,vec2(0.5+v.x*0.5,v.y)).r;a*=smoothstep(w-0.45,w,v.y);gl_FragColor=vec4(c*a,a);}'));
     g.linkProgram(pr); if (!g.getProgramParameter(pr, g.LINK_STATUS)) { gvid.src = 'assets/video/opening-r24' + TAKE + '.mp4'; return; }
     g.useProgram(pr);
     const b = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, b); g.bufferData(g.ARRAY_BUFFER, new Float32Array([0,0,1,0,0,1,1,1]), g.STATIC_DRAW);
@@ -38,7 +41,8 @@
     const tx = g.createTexture(); g.bindTexture(g.TEXTURE_2D, tx);
     [g.TEXTURE_WRAP_S, g.TEXTURE_WRAP_T].forEach(k => g.texParameteri(g.TEXTURE_2D, k, g.CLAMP_TO_EDGE));
     g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.LINEAR); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.LINEAR);
-    const uR = g.getUniformLocation(pr, 'r');
+    const uR = g.getUniformLocation(pr, 'r'), uW = g.getUniformLocation(pr, 'w'); g.uniform1f(uW, -1);
+    glWipe = x => g.uniform1f(uW, x);
     const size = () => {           // same framing as the old <video>: cover on phones, contain on wide screens, 45% vertical
       const dpr = Math.min(devicePixelRatio || 1, 2), W = gate.clientWidth, H = gate.clientHeight;
       cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); g.viewport(0, 0, cv.width, cv.height);
@@ -56,7 +60,7 @@
     gvid.src = 'assets/video/opening-d24' + TAKE + '.mp4';
     gvid.after(cv); gate.classList.add('gl'); gl = g;
   })();
-  let opened = false, revealing = false, done = false, under = false;
+  let opened = false, revealing = false, done = false, under = false, wipeT0 = 0;
   // the live page goes under the envelope (names printed, no entrance animation) — it is simply there when the flaps open
   const pageUnder = () => {
     if (under) return; under = true;
@@ -83,7 +87,15 @@
     if (reduce || !gvid) { irisReveal(); return; }
     const watch = () => { if (done || revealing) return;
       const t = gvid.currentTime, d = gvid.duration || 99;
-      if (gl) { if (glDraw()) gate.classList.add('vplaying'); if (t >= OPEN_AT) pageUnder(); }
+      if (gl) {
+        if (t >= OPEN_AT) pageUnder();
+        if (t >= REVEAL_FROM && !wipeT0) wipeT0 = performance.now();
+        if (t >= HOLD_AT && !gvid.paused) gvid.pause();
+        if (wipeT0) { let x = Math.min(1, (performance.now() - wipeT0) / REVEAL_MS); x = x * x * (3 - 2 * x); glWipe(x * 1.45); }
+        if (glDraw()) gate.classList.add('vplaying');
+        if (wipeT0 && performance.now() - wipeT0 >= REVEAL_MS) { closeGate(); return; }
+        requestAnimationFrame(watch); return;
+      }
       if (gvid.ended || t >= d - .06) {
         gvid.pause();
         if (gl) { glDraw(); requestAnimationFrame(closeGate); }   // last frame is fully transparent: the page is already showing
