@@ -935,3 +935,11 @@ body.open.r24 .tagline{animation:nameIn 1.2s var(--ease) 1.8s forwards}
 body.open.r24 .date-line{animation:fade 1.1s ease 2.1s forwards}
 body.open.r24:not(.r24done) .scroll-cue.sc2{transition:opacity 1s ease 2.5s}
 @media (prefers-reduced-motion:reduce){.vgate.soft{transition-duration:.4s}}
+/* Round 24c: WebGL envelope over the live page */
+.vgate.gl #gvid{opacity:0!important}
+.vg-gl{z-index:1;opacity:0;pointer-events:none}
+.vgate.gl.vplaying .vg-gl{opacity:1}
+.vgate.gl.vplaying .vg-still{opacity:0}
+.vgate.gl .vg-still{filter:none}
+.vgate.see{background:transparent}
+.vgate.see .vg-back{opacity:0;transition:opacity .8s ease}

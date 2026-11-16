@@ -16,48 +16,97 @@
 
   /* ================= OPENING: tap the ribbon -> ribbon slides away (video) -> soft circular reveal of the invitation ================= */
   const gate = $('#gate'), gvid = $('#gvid'), hero = $('#hero');
-  // preview only: ?take=2 plays the second opening film for comparison
-  if (gvid && /[?&]take=2\b/.test(location.search)) gvid.src = 'assets/video/opening-r24b.mp4';
-  let opened = false, revealing = false, done = false;
-  // Round 24 (client ref reel): ONE continuous film — ribbon slides off, the envelope unfolds like real paper and ends on the
-  // bare maroon card (same picture as the hero background). Hand-off is a gentle opacity fade between matching frames,
-  // then the emblem and names write themselves in (body.open.r24 delays in CSS). No mask, no glow, no ring.
+  // Round 24c: the envelope film carries its own transparency (colour | alpha side by side) and is drawn with WebGL
+  // OVER the live invitation, so the card that appears as the flaps open IS the real page (names already printed) —
+  // no hand-off, nothing to cut to. Fallback (no WebGL): the plain film + soft fade.
+  const TAKE = /[?&]take=2\b/.test(location.search) ? 'b' : '';
+  const OPEN_AT = 3.5;                              // flap starts lifting: page under the envelope must be ready
+  let gl = null, glDraw = null;
+  (() => {
+    if (!gvid) return;
+    const cv = document.createElement('canvas'); cv.className = 'vg-vid vg-gl'; cv.setAttribute('aria-hidden', 'true');
+    let g; try { g = cv.getContext('webgl', { premultipliedAlpha: true, alpha: true, antialias: false }); } catch (e) {}
+    if (!g) { gvid.src = 'assets/video/opening-r24' + TAKE + '.mp4'; return; }
+    const sh = (t, s) => { const o = g.createShader(t); g.shaderSource(o, s); g.compileShader(o); return o; };
+    const pr = g.createProgram();
+    g.attachShader(pr, sh(g.VERTEX_SHADER, 'attribute vec2 p;uniform vec4 r;varying vec2 v;void main(){v=vec2(p.x,1.0-p.y);gl_Position=vec4(r.xy+p*r.zw,0.0,1.0);}'));
+    g.attachShader(pr, sh(g.FRAGMENT_SHADER, 'precision mediump float;uniform sampler2D t;varying vec2 v;void main(){vec3 c=texture2D(t,vec2(v.x*0.5,v.y)).rgb;float a=texture2D(t,vec2(0.5+v.x*0.5,v.y)).r;gl_FragColor=vec4(c*a,a);}'));
+    g.linkProgram(pr); if (!g.getProgramParameter(pr, g.LINK_STATUS)) { gvid.src = 'assets/video/opening-r24' + TAKE + '.mp4'; return; }
+    g.useProgram(pr);
+    const b = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, b); g.bufferData(g.ARRAY_BUFFER, new Float32Array([0,0,1,0,0,1,1,1]), g.STATIC_DRAW);
+    const loc = g.getAttribLocation(pr, 'p'); g.enableVertexAttribArray(loc); g.vertexAttribPointer(loc, 2, g.FLOAT, false, 0, 0);
+    const tx = g.createTexture(); g.bindTexture(g.TEXTURE_2D, tx);
+    [g.TEXTURE_WRAP_S, g.TEXTURE_WRAP_T].forEach(k => g.texParameteri(g.TEXTURE_2D, k, g.CLAMP_TO_EDGE));
+    g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.LINEAR); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.LINEAR);
+    const uR = g.getUniformLocation(pr, 'r');
+    const size = () => {           // same framing as the old <video>: cover on phones, contain on wide screens, 45% vertical
+      const dpr = Math.min(devicePixelRatio || 1, 2), W = gate.clientWidth, H = gate.clientHeight;
+      cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); g.viewport(0, 0, cv.width, cv.height);
+      const vw = 720, vh = 1294, s = matchMedia('(min-aspect-ratio:3/4)').matches ? Math.min(W / vw, H / vh) : Math.max(W / vw, H / vh);
+      const w = vw * s, h = vh * s, x = (W - w) / 2, y = (H - h) * .45;
+      // clip space: left, bottom, width, height (quad p.y=0 is the bottom edge)
+      g.uniform4f(uR, x / W * 2 - 1, 1 - (y + h) / H * 2, w / W * 2, h / H * 2);
+    };
+    size(); addEventListener('resize', size);
+    glDraw = () => {
+      if (gvid.readyState < 2) return false;
+      try { g.texImage2D(g.TEXTURE_2D, 0, g.RGB, g.RGB, g.UNSIGNED_BYTE, gvid); } catch (e) { return false; }
+      g.clearColor(0, 0, 0, 0); g.clear(g.COLOR_BUFFER_BIT); g.drawArrays(g.TRIANGLE_STRIP, 0, 4); return true;
+    };
+    gvid.src = 'assets/video/opening-a24' + TAKE + '.mp4';
+    gvid.after(cv); gate.classList.add('gl'); gl = g;
+  })();
+  let opened = false, revealing = false, done = false, under = false;
+  // the live page goes under the envelope (names printed, no entrance animation) — it is simply there when the flaps open
+  const pageUnder = () => {
+    if (under) return; under = true;
+    body.classList.add('open', 'printed', 'r24'); scrollTo(0, 0); loadDeferred();
+    gate.classList.add('see');
+  };
+  const closeGate = () => {
+    if (done) return; done = true;
+    body.classList.remove('locked'); gate.remove();
+    try { gvid && gvid.pause(); } catch (e) {}
+  };
+  // fallback (no WebGL / no video / skip): soft fade onto the page, names write in
   const irisReveal = () => {
     if (revealing) return; revealing = true;
-    body.classList.add('open', 'r24'); body.classList.remove('locked'); scrollTo(0, 0); loadDeferred();
+    if (gl && opened && !reduce) { pageUnder(); gate.classList.add('soft'); setTimeout(closeGate, 700); return; }
+    body.classList.add('open', 'r24'); scrollTo(0, 0); loadDeferred();
     gate.classList.add('soft');
     setTimeout(() => body.classList.add('r24done'), 4200);
-    const end = () => {
-      if (done) return; done = true;
-      gate.remove();
-      try { gvid && gvid.pause(); } catch (e) {}
-    };
-    setTimeout(end, reduce ? 50 : 1000);
+    setTimeout(closeGate, reduce ? 50 : 1000);
   };
   const finish = () => {
     if (opened) { irisReveal(); return; }      // a second tap skips straight to the card
     opened = true; gate.classList.add('playing'); window.__music && window.__music();
     if (reduce || !gvid) { irisReveal(); return; }
     const watch = () => { if (done || revealing) return;
-      const d = gvid.duration || 99;
-      if (gvid.ended || gvid.currentTime >= d - .06) { gvid.pause(); irisReveal(); return; }
+      const t = gvid.currentTime, d = gvid.duration || 99;
+      if (gl) { if (glDraw()) gate.classList.add('vplaying'); if (t >= OPEN_AT) pageUnder(); }
+      if (gvid.ended || t >= d - .06) {
+        gvid.pause();
+        if (gl) { glDraw(); requestAnimationFrame(closeGate); }   // last frame is fully transparent: the page is already showing
+        else irisReveal();
+        return; }
       requestAnimationFrame(watch); };
     requestAnimationFrame(watch);
-    gvid.addEventListener('ended', irisReveal);
+    gvid.addEventListener('ended', () => { if (gl) { glDraw(); pageUnder(); closeGate(); } else irisReveal(); });
     gvid.addEventListener('error', irisReveal);
-    // show the video only once it is really drawing frames — the identical still underneath covers any black/flash
-    const showVid = () => gate.classList.add('vplaying');
-    if (gvid.requestVideoFrameCallback) gvid.requestVideoFrameCallback(() => showVid());
-    else gvid.addEventListener('timeupdate', function once() { if (gvid.currentTime > .05) { showVid(); gvid.removeEventListener('timeupdate', once); } });
+    if (!gl) {
+      const showVid = () => gate.classList.add('vplaying');
+      if (gvid.requestVideoFrameCallback) gvid.requestVideoFrameCallback(() => showVid());
+      else gvid.addEventListener('timeupdate', function once() { if (gvid.currentTime > .05) { showVid(); gvid.removeEventListener('timeupdate', once); } });
+    }
     const p = gvid.play(); if (p && p.catch) p.catch(irisReveal);
-    setTimeout(irisReveal, 14000);                // safety net
+    setTimeout(irisReveal, 15000);                // safety net
   };
   // prime the film on load: decode and hold its first frame (muted play -> pause) and show the real video,
   // so the tap only starts motion on the very same picture. Retries on every readiness event; never blocks the tap.
   (() => {
     if (!gvid) return;
     let primed = false, trying = false;
-    const show = () => gate.classList.add('vplaying');
+    const show = () => { if (gl) { if (glDraw()) gate.classList.add('vplaying'); else setTimeout(show, 120); } else gate.classList.add('vplaying'); };
     const prime = () => {
       if (primed || trying || opened || gvid.readyState < 2) return; trying = true;
       gvid.muted = true;
