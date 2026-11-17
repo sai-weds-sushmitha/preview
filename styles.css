@@ -968,3 +968,5 @@ body.open.r24:not(.r24done) .scroll-cue.sc2{transition:opacity .8s ease 1.4s}
 .vgate.soft{transition:opacity 1s ease}
 .vgate .vg-hint{z-index:5}
 .vgate.soft{transition:opacity 1.4s cubic-bezier(.4,0,.2,1)}
+.vgate.fast.soft{transition-duration:.7s}
+html:has(body.locked){overflow:hidden}body.locked{overflow:hidden;touch-action:none}

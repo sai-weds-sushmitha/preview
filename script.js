@@ -68,10 +68,12 @@
     if (ov) { gvid && (gvid.currentTime = gvid.duration || gvid.currentTime); ov.style.clipPath = 'none'; ovIn.style.transform = `translate(${geo.bx || 0}px, ${geo.by || 0}px)`; ov.style.visibility = 'visible'; }
     body.classList.add('open', 'printed'); body.classList.remove('locked'); scrollTo(0, 0); loadDeferred();
     gate.classList.add('soft');                        // identical picture underneath: names stay put, film dissolves
+    const quick = () => { if (window.scrollY > 2 && gate.isConnected) { gate.style.transition = 'none'; gate.style.visibility = 'hidden'; removeEventListener('scroll', quick); } };
+    addEventListener('scroll', quick, { passive: true });   // page scrolled during the dissolve: clear the film at once (no double names)
     setTimeout(() => body.classList.add('r24done'), 1200);
-    setTimeout(() => { done = true; gate.remove(); try { gvid && gvid.pause(); } catch (e) {} }, 1500);
+    setTimeout(() => { done = true; gate.remove(); try { gvid && gvid.pause(); } catch (e) {} }, gate.classList.contains('fast') ? 800 : 1500);
   };
-  const finish = () => {
+  const finish = (fast) => {
     if (opened) return;                        // once playing, further taps/scrolls never cut to the end
     opened = true; gate.classList.add('playing'); window.__music && window.__music();
     body.classList.add('printed');
@@ -84,6 +86,8 @@
     gvid.addEventListener('error', irisReveal);
     const showVid = () => gate.classList.add('vplaying');
     if (gvid.requestVideoFrameCallback) gvid.requestVideoFrameCallback(() => showVid());
+    // opened by a scroll/swipe: same film, ~2.5x faster (about 1.6s), then the page scrolls normally
+    gate.classList.toggle('fast', fast === true); try { gvid.playbackRate = fast === true ? 2.5 : 1; } catch (e) {}
     const p = gvid.play(); if (p && p.catch) p.catch(irisReveal);
     gvid.requestVideoFrameCallback ? gvid.requestVideoFrameCallback(loop) : requestAnimationFrame(loop);
     setTimeout(irisReveal, 9000);              // safety net
@@ -103,15 +107,22 @@
       if (pr && pr.then) pr.then(hold).catch(() => { trying = false; }); else hold();
     };
     ['loadeddata', 'canplay', 'canplaythrough', 'progress'].forEach(ev => gvid.addEventListener(ev, prime));
+    // download the whole film up front (about 1.8 MB) so a slow connection can never stall it mid-opening
+    if (window.fetch && window.URL && URL.createObjectURL) fetch(gvid.currentSrc || gvid.src).then(r => r.ok ? r.blob() : null).then(bl => {
+      if (!bl || opened) return; primed = false; trying = false; gvid.src = URL.createObjectURL(bl); gvid.load(); prime();
+    }).catch(() => {});
     const poll = setInterval(() => { if (primed || opened) clearInterval(poll); else prime(); }, 300);
     prime();
   })();
-  gate.addEventListener('click', finish);
-  gate.addEventListener('keydown', e => { if (['Enter', ' ', 'ArrowDown'].includes(e.key)) { e.preventDefault(); finish(); } });
+  gate.addEventListener('click', () => finish(false));
+  gate.addEventListener('keydown', e => { if (['Enter', ' ', 'ArrowDown'].includes(e.key)) { e.preventDefault(); finish(e.key === 'ArrowDown'); } });
   let gy = null;
   gate.addEventListener('touchstart', e => { gy = e.touches[0].clientY; }, { passive: true });
-  gate.addEventListener('touchmove', e => { if (gy !== null && Math.abs(e.touches[0].clientY - gy) > 30) { gy = null; finish(); } }, { passive: true });
-  gate.addEventListener('wheel', e => { if (!opened && Math.abs(e.deltaY) > 4) finish(); }, { passive: true });
+  gate.addEventListener('touchmove', e => { if (gy !== null && Math.abs(e.touches[0].clientY - gy) > 30) { gy = null; finish(true); } }, { passive: true });
+  gate.addEventListener('wheel', e => { if (!revealing) e.preventDefault(); if (!opened && Math.abs(e.deltaY) > 4) finish(true); }, { passive: false });
+  // the page must not move behind the opening (it used to scroll ~1000px, then jump back to the top = blank frame)
+  gate.addEventListener('touchmove', e => { if (!revealing && e.cancelable) e.preventDefault(); }, { passive: false });
+  addEventListener('keydown', e => { if (!revealing && document.body.classList.contains('locked') && ['ArrowDown','ArrowUp','PageDown','PageUp',' ','End','Home'].includes(e.key)) e.preventDefault(); });
 
   /* ================= music: from the gesture that opens the scroll, slow fade in ================= */
   (() => {
