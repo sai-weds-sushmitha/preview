@@ -947,3 +947,15 @@ body.open.r24:not(.r24done) .scroll-cue.sc2{transition:opacity 1s ease 2.5s}
 .vgate.ending.vplaying #gvid,.vgate.ending .vg-vid{opacity:1}
 @media (min-aspect-ratio:3/4){.vgate[data-fit=contain] .vg-vid{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30%,#000 70%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 30%,#000 70%,transparent 100%)}}
 .vgate .vg-still{filter:brightness(1.026)}
+
+/* Round 28c: quick names - start as the card settles, all in within ~1.8s */
+.vgate.soft{transition:opacity .55s ease}
+body.open.r24 .medal-hero{animation:medalIn 1s var(--ease) .05s forwards}
+body.open.r24 .h-fade{animation:fade .8s ease .2s forwards}
+body.open.r24 .n1{animation:nameIn 1s var(--ease) .2s forwards}
+body.open.r24 .amp{animation:fade .8s ease .45s forwards}
+body.open.r24 .n2{animation:nameIn 1s var(--ease) .5s forwards}
+body.open.r24 .tagline{animation:nameIn .9s var(--ease) .8s forwards}
+body.open.r24 .date-line{animation:fade .8s ease 1s forwards}
+body.open.r24:not(.r24done) .scroll-cue.sc2{transition:opacity .8s ease 1.4s}
+.vgate .vg-back{z-index:0}.vgate .vg-vid{z-index:1}.vgate .vg-hint{z-index:3}

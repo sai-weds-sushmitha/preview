@@ -34,13 +34,13 @@
     if (revealing) return; revealing = true;
     body.classList.add('open', 'r24'); body.classList.remove('locked'); scrollTo(0, 0); loadDeferred();
     gate.classList.add('soft');
-    setTimeout(() => body.classList.add('r24done'), 4200);
+    setTimeout(() => body.classList.add('r24done'), 2600);
     const end = () => {
       if (done) return; done = true;
       gate.remove();
       try { gvid && gvid.pause(); } catch (e) {}
     };
-    setTimeout(end, reduce ? 50 : 1000);
+    setTimeout(end, reduce ? 50 : 700);
   };
   const finish = () => {
     if (opened) { irisReveal(); return; }      // a second tap skips straight to the card
@@ -48,8 +48,8 @@
     if (reduce || !gvid) { irisReveal(); return; }
     const watch = () => { if (done || revealing) return;
       const d = gvid.duration || 99;
-      if (gvid.currentTime >= d - 1.1) gate.classList.add('ending');   // card has settled: page-width bands fade in behind the film
-      if (gvid.ended || gvid.currentTime >= d - .06) { gvid.pause(); irisReveal(); return; }
+      if (gate.dataset.fit === 'contain' && gvid.currentTime >= d - .5) gate.classList.add('ending');   // wide screens only: side bands join once the card has settled
+      if (gvid.ended || gvid.currentTime >= d - .45) { irisReveal(); return; }   // names start as the card settles
       requestAnimationFrame(watch); };
     requestAnimationFrame(watch);
     gvid.addEventListener('ended', irisReveal);
