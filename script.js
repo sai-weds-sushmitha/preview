@@ -31,9 +31,10 @@
   // names ride ON that card: a copy of the hero text sits over the film, clipped to the card's visible area and moved
   // with it frame by frame (card edges measured from the film). When the card settles, the names are already exactly
   // where the page's names are, so the film simply dissolves into the identical page underneath. Nothing pops in.
-  const CT = [61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98];
-  const CTOP = [279,275,266,256,247,237,228,220,212,204,196,189,182,175,169,162,156,149,144,138,133,129,124,120,117,113,110,106,102,99,97,93,89,86,86,86,86,86];
-  const CBOT = [343,355,379,405,432,463,494,524,553,586,622,657,695,733,771,811,850,888,926,963,1001,1033,1069,1104,1137,1167,1188,1200,1200,1200,1200,1200,1200,1200,1200,1200,1200,1200];
+  // card edges in film px, sampled from the 60fps film (time in seconds)
+  const CT = [2.5, 2.55, 2.6, 2.65, 2.7, 2.75, 2.8, 2.85, 2.9, 2.95, 3.0, 3.05, 3.1, 3.15, 3.2, 3.25, 3.3, 3.35, 3.4, 3.45, 3.5, 3.55, 3.6, 3.65, 3.7, 3.75, 3.8, 3.85, 3.9, 3.95, 4.0, 4.0333];
+  const CTOP = [283.8, 278.7, 268.9, 259.3, 247.0, 234.1, 224.3, 214.3, 204.3, 194.7, 186.0, 177.9, 170.0, 162.6, 155.0, 147.3, 140.4, 134.3, 129.0, 123.9, 119.0, 114.6, 110.4, 106.4, 100.1, 96.3, 92.9, 90.3, 86, 86, 86, 86];
+  const CBOT = [331.5, 345.1, 374.0, 405.1, 436.1, 471.0, 508.9, 546.1, 586.6, 629.7, 671.9, 717.6, 763.9, 808.6, 855.3, 899.6, 945.1, 990.6, 1031.9, 1074.1, 1115.0, 1151.1, 1182.7, 1199.6, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200];
   const lerpT = (arr, f) => { if (f <= CT[0]) return arr[0]; const n = CT.length - 1; if (f >= CT[n]) return arr[n];
     let i = 0; while (CT[i + 1] < f) i++; const u = (f - CT[i]) / (CT[i + 1] - CT[i]); return arr[i] + (arr[i + 1] - arr[i]) * u; };
   let ov = null, ovIn = null, geo = null;
@@ -51,10 +52,10 @@
     const r = hero.querySelector('.hero-inner'), c = ovIn.querySelector('.hero-inner');
     if (r && c) { const a = r.getBoundingClientRect(), b = c.getBoundingClientRect(); geo.bx = a.left - b.left; geo.by = a.top - b.top; }
   };
-  const track = () => {
+  const track = (t0) => {
     if (!ov || !gvid) return;
-    const f = gvid.currentTime * 24;
-    if (f < CT[0] - .5) { ov.style.visibility = 'hidden'; return; }
+    const f = (t0 != null ? t0 : gvid.currentTime);
+    if (f < CT[0] - .01) { ov.style.visibility = 'hidden'; return; }
     ov.style.visibility = 'visible';
     const top = lerpT(CTOP, f), bot = lerpT(CBOT, f), g = geo;
     const off = (top - 86) * g.sy;                                  // card offset from its final place
@@ -68,16 +69,16 @@
     body.classList.add('open', 'printed'); body.classList.remove('locked'); scrollTo(0, 0); loadDeferred();
     gate.classList.add('soft');                        // identical picture underneath: names stay put, film dissolves
     setTimeout(() => body.classList.add('r24done'), 1200);
-    setTimeout(() => { done = true; gate.remove(); try { gvid && gvid.pause(); } catch (e) {} }, 1100);
+    setTimeout(() => { done = true; gate.remove(); try { gvid && gvid.pause(); } catch (e) {} }, 1500);
   };
   const finish = () => {
-    if (opened) { irisReveal(); return; }      // a second tap skips straight to the card
+    if (opened) return;                        // once playing, further taps/scrolls never cut to the end
     opened = true; gate.classList.add('playing'); window.__music && window.__music();
     body.classList.add('printed');
     if (reduce || !gvid) { irisReveal(); return; }
     buildOverlay();
-    const loop = () => { if (done || revealing) return; track();
-      if (gvid.ended || gvid.currentTime >= (gvid.duration || 99) - .04) { irisReveal(); return; }
+    const loop = (now, meta) => { if (done || revealing) return; track(meta && meta.mediaTime != null ? meta.mediaTime : undefined);
+      if (gvid.ended || gvid.currentTime >= (gvid.duration || 99) - .03) { irisReveal(); return; }
       gvid.requestVideoFrameCallback ? gvid.requestVideoFrameCallback(loop) : requestAnimationFrame(loop); };
     gvid.addEventListener('ended', irisReveal);
     gvid.addEventListener('error', irisReveal);

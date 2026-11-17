@@ -967,3 +967,4 @@ body.open.r24:not(.r24done) .scroll-cue.sc2{transition:opacity .8s ease 1.4s}
 .vgate .ov-hero .band,.vgate .ov-hero .scroll-cue{visibility:hidden!important}
 .vgate.soft{transition:opacity 1s ease}
 .vgate .vg-hint{z-index:5}
+.vgate.soft{transition:opacity 1.4s cubic-bezier(.4,0,.2,1)}
