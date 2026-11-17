@@ -937,9 +937,13 @@ body.open.r24:not(.r24done) .scroll-cue.sc2{transition:opacity 1s ease 2.5s}
 @media (prefers-reduced-motion:reduce){.vgate.soft{transition-duration:.4s}}
 
 /* ===== Round 28: ribbon film -> envelope opens -> maroon card, seamless hand-off ===== */
-:root{--fk:1}
-.hero>.band,.vg-back .band{height:calc(46px * var(--fk));box-shadow:0 calc(2px * var(--fk)) 0 #c58b2c,0 calc(-2px * var(--fk)) 0 #c58b2c}
-@media (min-aspect-ratio:9/16){.vg-vid{object-fit:contain;object-position:50% 50%}}
+:root{--fx:1;--fy:1}
+.hero>.band,.vg-back .band{height:calc(46px * var(--fy));background-size:calc(432.4px * var(--fx)) 100%;box-shadow:0 calc(2px * var(--fy)) 0 #c58b2c,0 calc(-2px * var(--fy)) 0 #c58b2c}
+.vgate .vg-vid{object-position:50% 50%;filter:none;-webkit-mask-image:none;mask-image:none}
+.vgate[data-fit=cover] .vg-vid{object-fit:cover}
+.vgate[data-fit=fill] .vg-vid{object-fit:fill}
+.vgate[data-fit=contain] .vg-vid{object-fit:contain}
 .vgate.ending .vg-back .band{opacity:1}
 .vgate.ending.vplaying #gvid,.vgate.ending .vg-vid{opacity:1}
-@media (min-aspect-ratio:3/4){.vg-vid{filter:none;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30%,#000 70%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 30%,#000 70%,transparent 100%)}}
+@media (min-aspect-ratio:3/4){.vgate[data-fit=contain] .vg-vid{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30%,#000 70%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 30%,#000 70%,transparent 100%)}}
+.vgate .vg-still{filter:brightness(1.026)}

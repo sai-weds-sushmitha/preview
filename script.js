@@ -19,7 +19,12 @@
   // Round 28: the film is drawn for a 360x640 screen and always shown at full viewport height (cover on tall phones,
   // contain on wider screens), so its scale is H/640. The hero borders use the same scale, so at the hand-off the
   // film's borders sit exactly on the page's borders: nothing shifts, nothing doubles.
-  const fitFilm = () => document.documentElement.style.setProperty('--fk', (innerHeight / 640).toFixed(4));
+  // Phones always edge to edge (no side strips): taller than 9:16 -> cover (crops sides only); up to 0.64 -> fill
+  // (<=10% stretch, invisible on the painting); tablets/desktop -> contain. Page borders take the film's x/y scale.
+  const fitFilm = () => { const W = innerWidth, H = innerHeight, r = W / H, fy = H / 640;
+    const mode = r <= .5625 ? 'cover' : r <= .64 ? 'fill' : 'contain', fx = mode === 'fill' ? W / 360 : fy;
+    const st = document.documentElement.style; st.setProperty('--fx', fx.toFixed(4)); st.setProperty('--fy', fy.toFixed(4));
+    if (gate) gate.dataset.fit = mode; };
   fitFilm(); addEventListener('orientationchange', () => setTimeout(fitFilm, 300));
   let opened = false, revealing = false, done = false;
   // Round 24 (client ref reel): ONE continuous film — ribbon slides off, the envelope unfolds like real paper and ends on the
