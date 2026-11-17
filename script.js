@@ -30,17 +30,37 @@
   // Round 24 (client ref reel): ONE continuous film — ribbon slides off, the envelope unfolds like real paper and ends on the
   // bare maroon card (same picture as the hero background). Hand-off is a gentle opacity fade between matching frames,
   // then the emblem and names write themselves in (body.open.r24 delays in CSS). No mask, no glow, no ring.
+  // Round 28d: the names live ON the card. The film stops the moment the flap has lifted; that exact frame is split
+  // at the envelope's mouth (film y=226 of 1280) into two paper pieces. The flap piece lifts away, the front panel
+  // slides down, and behind them is the real invitation card (the live hero, names already printed). No video->page
+  // hand-off, no fade, nothing appears afterwards.
+  const CUT = 226 / 1280;
   const irisReveal = () => {
     if (revealing) return; revealing = true;
-    body.classList.add('open', 'r24'); body.classList.remove('locked'); scrollTo(0, 0); loadDeferred();
-    gate.classList.add('soft');
-    setTimeout(() => body.classList.add('r24done'), 2600);
-    const end = () => {
-      if (done) return; done = true;
-      gate.remove();
-      try { gvid && gvid.pause(); } catch (e) {}
+    body.classList.add('open', 'printed'); body.classList.remove('locked'); scrollTo(0, 0); loadDeferred();
+    const W = gate.clientWidth, H = gate.clientHeight, mode = gate.dataset.fit || 'cover';
+    let sx = W / 720, sy = H / 1280;
+    if (mode === 'cover') sx = sy = Math.max(sx, sy); else if (mode === 'contain') sx = sy = Math.min(sx, sy);
+    const dw = 720 * sx, dh = 1280 * sy, dx = (W - dw) / 2, dy = (H - dh) / 2, cy = dy + dh * CUT;
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    const piece = (cls, clip) => {
+      const c = document.createElement('canvas'); c.className = 'sp ' + cls;
+      c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
+      const x = c.getContext('2d'); x.scale(dpr, dpr);
+      try { x.drawImage(gvid, dx, dy, dw, dh); } catch (e) {}
+      c.style.clipPath = clip; gate.appendChild(c); return c;
     };
-    setTimeout(end, reduce ? 50 : 700);
+    let ok = !!(gvid && gvid.readyState >= 2 && !reduce);
+    if (ok) {
+      piece('sp-top', `inset(0 0 ${H - cy}px 0)`);
+      piece('sp-bot', `inset(${cy}px 0 0 0)`);
+      gate.style.setProperty('--cy', cy + 'px');
+      gate.classList.add('split');                      // canvases now cover the paused video exactly
+      requestAnimationFrame(() => requestAnimationFrame(() => gate.classList.add('part')));
+    } else gate.classList.add('soft');
+    setTimeout(() => body.classList.add('r24done'), 1600);
+    const end = () => { if (done) return; done = true; gate.remove(); try { gvid && gvid.pause(); } catch (e) {} };
+    setTimeout(end, ok ? 1700 : 700);
   };
   const finish = () => {
     if (opened) { irisReveal(); return; }      // a second tap skips straight to the card
@@ -48,8 +68,7 @@
     if (reduce || !gvid) { irisReveal(); return; }
     const watch = () => { if (done || revealing) return;
       const d = gvid.duration || 99;
-      if (gate.dataset.fit === 'contain' && gvid.currentTime >= d - .5) gate.classList.add('ending');   // wide screens only: side bands join once the card has settled
-      if (gvid.ended || gvid.currentTime >= d - .45) { irisReveal(); return; }   // names start as the card settles
+      if (gvid.ended || gvid.currentTime >= d - .03) { gvid.pause(); irisReveal(); return; }   // flap is up: part the envelope
       requestAnimationFrame(watch); };
     requestAnimationFrame(watch);
     gvid.addEventListener('ended', irisReveal);
