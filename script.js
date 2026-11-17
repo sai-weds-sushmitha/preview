@@ -14,25 +14,72 @@
   };
   addEventListener('load', () => setTimeout(loadDeferred, 2500));
 
-  /* ================= OPENING (Round 27): two painted doors with a card band across them. Tap -> the card glides up and
-     away, the doors swing open like a book onto the invitation, and the emblem + names fade in. Pure CSS 3D. ================= */
-  const gate = $('#gate'), hero = $('#hero');
-  let opened = false;
-  const finish = () => {
-    if (opened) return; opened = true;
-    window.__music && window.__music();
-    gate.classList.add('go');
-    // the page under the doors: names begin as the doors part
-    setTimeout(() => { body.classList.add('open', 'r24'); scrollTo(0, 0); loadDeferred(); }, reduce ? 0 : 650);
-    setTimeout(() => body.classList.add('r24done'), 4800);
-    setTimeout(() => { body.classList.remove('locked'); gate.remove(); }, reduce ? 500 : 3000);
+  /* ================= OPENING: tap the ribbon -> ribbon slides away (video) -> soft circular reveal of the invitation ================= */
+  const gate = $('#gate'), gvid = $('#gvid'), hero = $('#hero');
+  // Round 28: the film is drawn for a 360x640 screen and always shown at full viewport height (cover on tall phones,
+  // contain on wider screens), so its scale is H/640. The hero borders use the same scale, so at the hand-off the
+  // film's borders sit exactly on the page's borders: nothing shifts, nothing doubles.
+  const fitFilm = () => document.documentElement.style.setProperty('--fk', (innerHeight / 640).toFixed(4));
+  fitFilm(); addEventListener('orientationchange', () => setTimeout(fitFilm, 300));
+  let opened = false, revealing = false, done = false;
+  // Round 24 (client ref reel): ONE continuous film — ribbon slides off, the envelope unfolds like real paper and ends on the
+  // bare maroon card (same picture as the hero background). Hand-off is a gentle opacity fade between matching frames,
+  // then the emblem and names write themselves in (body.open.r24 delays in CSS). No mask, no glow, no ring.
+  const irisReveal = () => {
+    if (revealing) return; revealing = true;
+    body.classList.add('open', 'r24'); body.classList.remove('locked'); scrollTo(0, 0); loadDeferred();
+    gate.classList.add('soft');
+    setTimeout(() => body.classList.add('r24done'), 4200);
+    const end = () => {
+      if (done) return; done = true;
+      gate.remove();
+      try { gvid && gvid.pause(); } catch (e) {}
+    };
+    setTimeout(end, reduce ? 50 : 1000);
   };
+  const finish = () => {
+    if (opened) { irisReveal(); return; }      // a second tap skips straight to the card
+    opened = true; gate.classList.add('playing'); window.__music && window.__music();
+    if (reduce || !gvid) { irisReveal(); return; }
+    const watch = () => { if (done || revealing) return;
+      const d = gvid.duration || 99;
+      if (gvid.currentTime >= d - 1.1) gate.classList.add('ending');   // card has settled: page-width bands fade in behind the film
+      if (gvid.ended || gvid.currentTime >= d - .06) { gvid.pause(); irisReveal(); return; }
+      requestAnimationFrame(watch); };
+    requestAnimationFrame(watch);
+    gvid.addEventListener('ended', irisReveal);
+    gvid.addEventListener('error', irisReveal);
+    // show the video only once it is really drawing frames — the identical still underneath covers any black/flash
+    const showVid = () => gate.classList.add('vplaying');
+    if (gvid.requestVideoFrameCallback) gvid.requestVideoFrameCallback(() => showVid());
+    else gvid.addEventListener('timeupdate', function once() { if (gvid.currentTime > .05) { showVid(); gvid.removeEventListener('timeupdate', once); } });
+    const p = gvid.play(); if (p && p.catch) p.catch(irisReveal);
+    setTimeout(irisReveal, 14000);                // safety net
+  };
+  // prime the film on load: decode and hold its first frame (muted play -> pause) and show the real video,
+  // so the tap only starts motion on the very same picture. Retries on every readiness event; never blocks the tap.
+  (() => {
+    if (!gvid) return;
+    let primed = false, trying = false;
+    const show = () => gate.classList.add('vplaying');
+    const prime = () => {
+      if (primed || trying || opened || gvid.readyState < 2) return; trying = true;
+      gvid.muted = true;
+      const pr = gvid.play();
+      const hold = () => { trying = false; if (opened) return; primed = true; gvid.pause(); try { gvid.currentTime = 0; } catch (e) {}
+        gvid.requestVideoFrameCallback ? gvid.requestVideoFrameCallback(show) : setTimeout(show, 150); };
+      if (pr && pr.then) pr.then(hold).catch(() => { trying = false; }); else hold();
+    };
+    ['loadeddata', 'canplay', 'canplaythrough', 'progress'].forEach(ev => gvid.addEventListener(ev, prime));
+    const poll = setInterval(() => { if (primed || opened) clearInterval(poll); else prime(); }, 300);
+    prime();
+  })();
   gate.addEventListener('click', finish);
   gate.addEventListener('keydown', e => { if (['Enter', ' ', 'ArrowDown'].includes(e.key)) { e.preventDefault(); finish(); } });
   let gy = null;
   gate.addEventListener('touchstart', e => { gy = e.touches[0].clientY; }, { passive: true });
   gate.addEventListener('touchmove', e => { if (gy !== null && Math.abs(e.touches[0].clientY - gy) > 30) { gy = null; finish(); } }, { passive: true });
-  gate.addEventListener('wheel', e => { if (Math.abs(e.deltaY) > 4) finish(); }, { passive: true });
+  gate.addEventListener('wheel', e => { if (!opened && Math.abs(e.deltaY) > 4) finish(); }, { passive: true });
 
   /* ================= music: from the gesture that opens the scroll, slow fade in ================= */
   (() => {
