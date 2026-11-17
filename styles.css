@@ -960,18 +960,10 @@ body.open.r24 .date-line{animation:fade .8s ease 1s forwards}
 body.open.r24:not(.r24done) .scroll-cue.sc2{transition:opacity .8s ease 1.4s}
 .vgate .vg-back{z-index:0}.vgate .vg-vid{z-index:1}.vgate .vg-hint{z-index:3}
 
-/* Round 28d: envelope parts around the real card (names already on it) */
-.vgate .sp{position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none;will-change:transform;transition:transform 1.25s cubic-bezier(.55,0,.2,1)}
-.vgate.split{background:transparent}
-.vgate.split .vg-vid{opacity:0!important;transition:none}
-.vgate.split .vg-back{transition:opacity .9s ease .15s}
-.vgate.part .vg-back{opacity:0}
-.vgate.part .sp-top{transform:translateY(calc(-1 * var(--cy) - 12px))}
-.vgate.part .sp-bot{transform:translateY(calc(100% - var(--cy) + 12px));transition-duration:1.4s}
-body.printed .hero-inner{animation:none}
-.vgate.split~main .hero-inner,.vgate.split + main .hero-inner{transform:scale(.97);transition:transform 1.4s cubic-bezier(.3,0,.2,1)}
-.vgate.part~main .hero-inner{transform:none}
-
-/* Round 28e: no stop-start - pieces match the video's brightness and leave already moving */
-.vgate .sp{filter:brightness(1.018);transition:transform 1.15s cubic-bezier(.3,.45,.25,1)}
-.vgate.part .sp-bot{transition:transform 1.3s cubic-bezier(.3,.45,.25,1)}
+/* Round 28g: names ride on the card inside the film */
+.vgate .ov-wrap{position:absolute;inset:0;z-index:3;pointer-events:none;visibility:hidden}
+.vgate .ov-hero{position:absolute;inset:0;min-height:0;height:100%;background:none!important;will-change:transform}
+.vgate .ov-hero::before,.vgate .ov-hero::after{display:none!important}
+.vgate .ov-hero .band,.vgate .ov-hero .scroll-cue{visibility:hidden!important}
+.vgate.soft{transition:opacity 1s ease}
+.vgate .vg-hint{z-index:5}

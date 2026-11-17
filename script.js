@@ -27,61 +27,68 @@
     if (gate) gate.dataset.fit = mode; };
   fitFilm(); addEventListener('orientationchange', () => setTimeout(fitFilm, 300));
   let opened = false, revealing = false, done = false;
-  // Round 24 (client ref reel): ONE continuous film — ribbon slides off, the envelope unfolds like real paper and ends on the
-  // bare maroon card (same picture as the hero background). Hand-off is a gentle opacity fade between matching frames,
-  // then the emblem and names write themselves in (body.open.r24 delays in CSS). No mask, no glow, no ring.
-  // Round 28d: the names live ON the card. The film stops the moment the flap has lifted; that exact frame is split
-  // at the envelope's mouth (film y=226 of 1280) into two paper pieces. The flap piece lifts away, the front panel
-  // slides down, and behind them is the real invitation card (the live hero, names already printed). No video->page
-  // hand-off, no fade, nothing appears afterwards.
-  const CUT = 226 / 1280;
-  const irisReveal = () => {
-    if (revealing) return; revealing = true;
-    body.classList.add('open', 'printed'); body.classList.remove('locked'); scrollTo(0, 0); loadDeferred();
-    const W = gate.clientWidth, H = gate.clientHeight, mode = gate.dataset.fit || 'cover';
+  // Round 28g: the full single-take film plays (bow unties, flap lifts, card slides up out of the envelope). The real
+  // names ride ON that card: a copy of the hero text sits over the film, clipped to the card's visible area and moved
+  // with it frame by frame (card edges measured from the film). When the card settles, the names are already exactly
+  // where the page's names are, so the film simply dissolves into the identical page underneath. Nothing pops in.
+  const CT = [61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98];
+  const CTOP = [279,275,266,256,247,237,228,220,212,204,196,189,182,175,169,162,156,149,144,138,133,129,124,120,117,113,110,106,102,99,97,93,89,86,86,86,86,86];
+  const CBOT = [343,355,379,405,432,463,494,524,553,586,622,657,695,733,771,811,850,888,926,963,1001,1033,1069,1104,1137,1167,1188,1200,1200,1200,1200,1200,1200,1200,1200,1200,1200,1200];
+  const lerpT = (arr, f) => { if (f <= CT[0]) return arr[0]; const n = CT.length - 1; if (f >= CT[n]) return arr[n];
+    let i = 0; while (CT[i + 1] < f) i++; const u = (f - CT[i]) / (CT[i + 1] - CT[i]); return arr[i] + (arr[i + 1] - arr[i]) * u; };
+  let ov = null, ovIn = null, geo = null;
+  const geom = () => { const W = gate.clientWidth, H = gate.clientHeight, mode = gate.dataset.fit || 'cover';
     let sx = W / 720, sy = H / 1280;
     if (mode === 'cover') sx = sy = Math.max(sx, sy); else if (mode === 'contain') sx = sy = Math.min(sx, sy);
-    const dw = 720 * sx, dh = 1280 * sy, dx = (W - dw) / 2, dy = (H - dh) / 2, cy = dy + dh * CUT;
-    const dpr = Math.min(2, devicePixelRatio || 1);
-    const piece = (cls, clip) => {
-      const c = document.createElement('canvas'); c.className = 'sp ' + cls;
-      c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
-      const x = c.getContext('2d'); x.scale(dpr, dpr);
-      try { x.drawImage(gvid, dx, dy, dw, dh); } catch (e) {}
-      c.style.clipPath = clip; gate.appendChild(c); return c;
-    };
-    let ok = !!(gvid && gvid.readyState >= 2 && !reduce);
-    if (ok) {
-      piece('sp-top', `inset(0 0 ${H - cy}px 0)`);
-      piece('sp-bot', `inset(${cy}px 0 0 0)`);
-      gate.style.setProperty('--cy', cy + 'px');
-      gate.classList.add('split');                      // canvases now cover the paused video exactly
-      void gate.offsetWidth; gate.classList.add('part');   // keep moving: no hold between film and parting
-    } else gate.classList.add('soft');
-    setTimeout(() => body.classList.add('r24done'), 1600);
-    const end = () => { if (done) return; done = true; gate.remove(); try { gvid && gvid.pause(); } catch (e) {} };
-    setTimeout(end, ok ? 1700 : 700);
+    geo = { H, sy, dy: (H - 1280 * sy) / 2 }; };
+  const buildOverlay = () => {
+    ov = document.createElement('div'); ov.className = 'ov-wrap'; ov.setAttribute('aria-hidden', 'true');
+    ovIn = hero.cloneNode(true); ovIn.removeAttribute('id'); ovIn.classList.add('ov-hero');
+    ovIn.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+    ovIn.querySelectorAll('canvas').forEach(n => n.remove());
+    ov.appendChild(ovIn); gate.appendChild(ov); geom();
+    // lock the copy onto the page's real names (layouts can differ by a few px on some screens)
+    const r = hero.querySelector('.hero-inner'), c = ovIn.querySelector('.hero-inner');
+    if (r && c) { const a = r.getBoundingClientRect(), b = c.getBoundingClientRect(); geo.bx = a.left - b.left; geo.by = a.top - b.top; }
+  };
+  const track = () => {
+    if (!ov || !gvid) return;
+    const f = gvid.currentTime * 24;
+    if (f < CT[0] - .5) { ov.style.visibility = 'hidden'; return; }
+    ov.style.visibility = 'visible';
+    const top = lerpT(CTOP, f), bot = lerpT(CBOT, f), g = geo;
+    const off = (top - 86) * g.sy;                                  // card offset from its final place
+    const clipTop = g.dy + (top - 86) * g.sy, clipBot = g.dy + Math.min(bot, 1280) * g.sy;
+    ov.style.clipPath = `inset(${Math.max(0, clipTop)}px 0 ${Math.max(0, g.H - clipBot)}px 0)`;
+    ovIn.style.transform = `translate(${g.bx || 0}px, ${off + (g.by || 0)}px)`;
+  };
+  const irisReveal = () => {
+    if (revealing) return; revealing = true;
+    if (ov) { gvid && (gvid.currentTime = gvid.duration || gvid.currentTime); ov.style.clipPath = 'none'; ovIn.style.transform = `translate(${geo.bx || 0}px, ${geo.by || 0}px)`; ov.style.visibility = 'visible'; }
+    body.classList.add('open', 'printed'); body.classList.remove('locked'); scrollTo(0, 0); loadDeferred();
+    gate.classList.add('soft');                        // identical picture underneath: names stay put, film dissolves
+    setTimeout(() => body.classList.add('r24done'), 1200);
+    setTimeout(() => { done = true; gate.remove(); try { gvid && gvid.pause(); } catch (e) {} }, 1100);
   };
   const finish = () => {
     if (opened) { irisReveal(); return; }      // a second tap skips straight to the card
     opened = true; gate.classList.add('playing'); window.__music && window.__music();
+    body.classList.add('printed');
     if (reduce || !gvid) { irisReveal(); return; }
-    const watch = () => { if (done || revealing) return;
-      const d = gvid.duration || 99;
-      if (gvid.ended || gvid.currentTime >= d - .1) { gvid.pause(); irisReveal(); return; }   // flap is up: part the envelope
-      requestAnimationFrame(watch); };
-    requestAnimationFrame(watch);
+    buildOverlay();
+    const loop = () => { if (done || revealing) return; track();
+      if (gvid.ended || gvid.currentTime >= (gvid.duration || 99) - .04) { irisReveal(); return; }
+      gvid.requestVideoFrameCallback ? gvid.requestVideoFrameCallback(loop) : requestAnimationFrame(loop); };
     gvid.addEventListener('ended', irisReveal);
     gvid.addEventListener('error', irisReveal);
-    // show the video only once it is really drawing frames — the identical still underneath covers any black/flash
     const showVid = () => gate.classList.add('vplaying');
     if (gvid.requestVideoFrameCallback) gvid.requestVideoFrameCallback(() => showVid());
-    else gvid.addEventListener('timeupdate', function once() { if (gvid.currentTime > .05) { showVid(); gvid.removeEventListener('timeupdate', once); } });
     const p = gvid.play(); if (p && p.catch) p.catch(irisReveal);
-    setTimeout(irisReveal, 14000);                // safety net
+    gvid.requestVideoFrameCallback ? gvid.requestVideoFrameCallback(loop) : requestAnimationFrame(loop);
+    setTimeout(irisReveal, 9000);              // safety net
   };
   // prime the film on load: decode and hold its first frame (muted play -> pause) and show the real video,
-  // so the tap only starts motion on the very same picture. Retries on every readiness event; never blocks the tap.
+  // so the tap only starts motion on the very same picture.
   (() => {
     if (!gvid) return;
     let primed = false, trying = false;
