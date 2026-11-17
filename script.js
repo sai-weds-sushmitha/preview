@@ -56,7 +56,7 @@
       piece('sp-bot', `inset(${cy}px 0 0 0)`);
       gate.style.setProperty('--cy', cy + 'px');
       gate.classList.add('split');                      // canvases now cover the paused video exactly
-      requestAnimationFrame(() => requestAnimationFrame(() => gate.classList.add('part')));
+      void gate.offsetWidth; gate.classList.add('part');   // keep moving: no hold between film and parting
     } else gate.classList.add('soft');
     setTimeout(() => body.classList.add('r24done'), 1600);
     const end = () => { if (done) return; done = true; gate.remove(); try { gvid && gvid.pause(); } catch (e) {} };
@@ -68,7 +68,7 @@
     if (reduce || !gvid) { irisReveal(); return; }
     const watch = () => { if (done || revealing) return;
       const d = gvid.duration || 99;
-      if (gvid.ended || gvid.currentTime >= d - .03) { gvid.pause(); irisReveal(); return; }   // flap is up: part the envelope
+      if (gvid.ended || gvid.currentTime >= d - .1) { gvid.pause(); irisReveal(); return; }   // flap is up: part the envelope
       requestAnimationFrame(watch); };
     requestAnimationFrame(watch);
     gvid.addEventListener('ended', irisReveal);

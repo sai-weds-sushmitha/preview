@@ -971,3 +971,7 @@ body.open.r24:not(.r24done) .scroll-cue.sc2{transition:opacity .8s ease 1.4s}
 body.printed .hero-inner{animation:none}
 .vgate.split~main .hero-inner,.vgate.split + main .hero-inner{transform:scale(.97);transition:transform 1.4s cubic-bezier(.3,0,.2,1)}
 .vgate.part~main .hero-inner{transform:none}
+
+/* Round 28e: no stop-start - pieces match the video's brightness and leave already moving */
+.vgate .sp{filter:brightness(1.018);transition:transform 1.15s cubic-bezier(.3,.45,.25,1)}
+.vgate.part .sp-bot{transition:transform 1.3s cubic-bezier(.3,.45,.25,1)}
